@@ -1,0 +1,10 @@
+{
+  "name": "express_practice",
+  "description": "express test app for practice",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "express": "4.x",
+    "mysql": "^2.9.0"
+  }
+}
