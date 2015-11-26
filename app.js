@@ -44,5 +44,5 @@ app.get('/users', user.list);
 var port = (target === 'ALPHA') ? 3001 : 80;
 
 var server = app.listen(port, function() {
-	console.log('Listening on port %d', server.address().port);
+    console.log('Listening on port %d', server.address().port);
 });
