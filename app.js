@@ -3,20 +3,24 @@
  */
 
 var express = require('express');
+var passport = require('passport');
 var user = require('./models/user');
-var login = require('./controllers/login');
 var app = express();
+
 var logger = require('morgan');
+var passportConfig = require('./controllers/passport');
 
 if (!module.parent) {
     app.use(logger('dev'));
 }
+app.use(passport.initialize());
+app.use(passport.session());
+app.use('/', passportConfig.router);
 
 app.get('/', function(req, res){
     res.send('Hello World');
 });
 
-app.post('/login', user.list);
 
 app.get('/users', user.list);
 

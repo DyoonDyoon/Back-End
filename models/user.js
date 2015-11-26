@@ -8,9 +8,11 @@ var mysql = require('mysql');
 var connectionPool = mysql.createPool(dbConfig);
 
 exports.list = function (req, res) {
-    connectionPool.query('SELECT * FROM user', function(err, rows, fields) {
-        if (err) throw err;
+    connectionPool.getConnection(function (err, connection) {
+        connection.query('SELECT * FROM user', function (err, rows, fields) {
+            if (err) throw err;
 
-        res.json(rows);
+            res.json(rows);
+        });
     });
 }
