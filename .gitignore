@@ -35,3 +35,6 @@ node_modules
 
 # WebStorm
 .idea/
+
+# database config
+database.js
