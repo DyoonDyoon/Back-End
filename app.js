@@ -5,18 +5,13 @@
 var express = require('express');
 var user = require('./models/user');
 var login = require('./controllers/login');
-var passport = require('passport');
 var app = express();
 
 app.get('/', function(req, res){
     res.send('Hello World');
 });
 
-app.post('/login',
-    passport.authenticate('local'),
-    function(req, res) {
-        res.send('success');
-    });
+app.post('/login', user.list);
 
 app.get('/users', user.list);
 

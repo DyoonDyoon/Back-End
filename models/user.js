@@ -3,6 +3,14 @@
  */
 var users = [{ name: '권민준', email: 'minz@dgu.edu'}];
 
+var dbConfig = require('../database');
+var mysql = require('mysql');
+var connectionPool = mysql.createPool(dbConfig);
+
 exports.list = function (req, res) {
-    res.json(users);
+    connectionPool.query('SELECT * FROM user', function(err, rows, fields) {
+        if (err) throw err;
+
+        res.json(rows);
+    });
 }
