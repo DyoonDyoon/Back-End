@@ -15,12 +15,12 @@ if (!module.parent) {
 }
 app.use(passport.initialize());
 app.use(passport.session());
-app.use('/', passportConfig.router);
 
 app.get('/', function(req, res){
     res.send('Hello World');
 });
 
+app.post('/login', passportConfig.logIn);
 
 app.get('/users', user.list);
 

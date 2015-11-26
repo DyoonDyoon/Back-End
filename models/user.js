@@ -12,7 +12,8 @@ exports.list = function (req, res) {
         connection.query('SELECT * FROM user', function (err, rows, fields) {
             if (err) throw err;
 
-            res.json(rows);
+            connection.release();
+            return res.json(rows);
         });
     });
 }

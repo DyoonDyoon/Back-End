@@ -7,9 +7,9 @@ var mysql = require('mysql');
 var connectionPool = mysql.createPool(dbConfig);
 var passport = require('passport');
 
-var express = require('express');
-var router = express.Router();
-
+/********************************************
+ *  CONFIGURATION SETTING
+ ********************************************/
 passport.serializeUser(function(user, done) {
     done(null, user);
 });
@@ -25,15 +25,11 @@ passport.use(
             passwordField : 'pw'
         },
         function(username, password, done) {
-            if (username.length === 0)
-                return done(null, false, {
-                    'code' : 10,
-                    'message' : 'No userId'});
             connectionPool.getConnection(function(err,connection){
                 if(err){
                     return done(null, false);
                 }
-                var selectSql = 'SELECT id,userId, password FROM user WHERE userId = ?';
+                var selectSql = 'SELECT id, userId, password FROM user WHERE userId = ?';
                 connection.query(selectSql, [username], function(err,rows,fields){
                     if(err){
                         connection.release();
@@ -63,16 +59,27 @@ passport.use(
         })
 );
 
-router.post('/login', function(req, res, next) {
-    passport.authenticate('login', function(err, user, info) {
-        if (err) { return next(err); }
-        if (!user) { return res.status(210).json(info); }
-        req.logIn(user, function(err) {
-            if (err) { return next(err); }
+/********************************************
+ *  LOGIN
+ ********************************************/
+exports.logIn = function(req, res, next) {
+    if (req.query['id'].length === 0)
+        return res.status(210).json({
+            'code': 10,
+            'message': 'No userId'
+        });
+    passport.authenticate('login', function (err, user, info) {
+        if (err) {
+            return next(err);
+        }
+        if (!user) {
+            return res.status(210).json(info);
+        }
+        req.logIn(user, function (err) {
+            if (err) {
+                return next(err);
+            }
             return res.json(user);
         });
     })(req, res, next);
-});
-
-exports.router = router;
-exports.passport = passport;
+}
