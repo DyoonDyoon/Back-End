@@ -5,6 +5,8 @@
   "private": true,
   "dependencies": {
     "express": "4.x",
-    "mysql": "^2.9.0"
+    "mysql": "^2.9.0",
+    "passport": "^0.3.2",
+    "querystring": "^0.2.0"
   }
 }

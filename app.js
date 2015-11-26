@@ -3,12 +3,23 @@
  */
 
 var express = require('express');
+var user = require('./models/user');
+var login = require('./controllers/login');
+var passport = require('passport');
 var app = express();
 
-app.get('/hello.txt', function(req, res){
+app.get('/', function(req, res){
     res.send('Hello World');
 });
 
-var server = app.listen(3000, function() {
+app.post('/login',
+    passport.authenticate('local'),
+    function(req, res) {
+        res.send('success');
+    });
+
+app.get('/users', user.list);
+
+var server = app.listen(3001, function() {
     console.log('Listening on port %d', server.address().port);
 });
