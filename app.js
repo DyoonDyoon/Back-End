@@ -21,6 +21,7 @@ app.get('/', function(req, res){
 });
 
 app.post('/login', passportConfig.logIn);
+app.post('/join', passportConfig.join);
 
 app.get('/users', user.list);
 
