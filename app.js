@@ -9,6 +9,7 @@ var app = express();
 
 var logger = require('morgan');
 var passportConfig = require('./controllers/passport');
+var target = require('./target');
 
 if (!module.parent) {
     app.use(logger('dev'));
@@ -25,6 +26,8 @@ app.post('/join', passportConfig.join);
 
 app.get('/users', user.list);
 
-var server = app.listen(3001, function() {
+var port = (target === 'ALPHA') ? 3001 : 80;
+
+var server = app.listen(port, function() {
     console.log('Listening on port %d', server.address().port);
 });

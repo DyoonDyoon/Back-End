@@ -35,6 +35,9 @@ node_modules
 
 # WebStorm
 .idea/
+workspace.xml
 
-# database config
-database.js
+# server ignore file
+nohup.out
+server_on.sh
+target.js

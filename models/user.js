@@ -3,7 +3,7 @@
  */
 var users = [{ name: '권민준', email: 'minz@dgu.edu'}];
 
-var dbConfig = require('../database');
+var dbConfig = require('../config/database');
 var mysql = require('mysql');
 var connectionPool = mysql.createPool(dbConfig);
 

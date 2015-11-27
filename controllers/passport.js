@@ -2,7 +2,7 @@
  * Created by kweonminjun on 2015. 11. 22..
  */
 var localStrategy = require('passport-local').Strategy;
-var dbConfig = require('../database');
+var dbConfig = require('../config/database');
 var mysql = require('mysql');
 var connectionPool = mysql.createPool(dbConfig);
 var crypt = require('crypt');
