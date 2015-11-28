@@ -7,6 +7,8 @@ var mysql = require('mysql');
 var connectionPool = mysql.createPool(dbConfig);
 var crypt = require('crypto');
 var passport = require('passport');
+var tokenManager = require('./tokenManager');
+var async = require('async');
 
 /********************************************
  *  CONFIGURATION SETTING
@@ -105,26 +107,67 @@ passport.use(
  *  LOGIN
  ********************************************/
 exports.logIn = function(req, res, next) {
-    if (req.query['id'].length === 0)
-        return res.status(210).json({
-            'code': 10,
-            'message': 'No userId'
-        });
-    passport.authenticate('login', function (err, user, info) {
-        if (err) {
-            return next(err);
-        }
-        if (!user) {
-            return res.status(210).json(info);
-        }
-        req.logIn(user, function (err) {
-            if (err) {
-                return next(err);
-            }
-            return res.json(user);
-        });
-    })(req, res, next);
-}
+	if (req.query['id'].length === 0)
+		return res.status(210).json({
+			'code': 10,
+			'message': 'No userId'
+		});
+
+	var generateToken = function(req, res, next) {
+		tokenManager.generateToken(req.query[ 'id' ], function (err, token) {
+			passport.authenticate('login', function (err, user, info) {
+				if (err) {
+					return next(err);
+				}
+				if (!user) {
+					return res.status(210).json(info);
+				}
+
+				req.logIn(user, function (err) {
+					if (err) {
+						return next(err);
+					}
+					return res.json({
+						'user'        : user,
+						'accessToken' : token
+					});
+				});
+			})(req, res, next);
+		});
+	};
+
+	if (!req.query['token']) {
+		tokenManager.existsToken(req.query['id'], function(err, exists) {
+			if (exists) {
+				return res.status(210).json({
+					'code' : 5,
+					'message' : 'Invalid Access'
+				});
+			} else {
+				generateToken(req, res, next);
+			}
+		});
+	} else {
+		tokenManager.isExpired(req.query[ 'token' ], function (err, status) {
+			if (err) {
+				return res.status(500).json(err);
+			}
+			if (status.invalidToken) {
+				return res.status(210).json({
+					'code'    : 4,
+					'message' : 'Invalid Token'
+				});
+			}
+			if (status.expired) {
+				return res.status(210).json({
+					'code'    : 3,
+					'message' : 'session expired'
+				});
+			}
+			generateToken(req, res, next);
+		});
+	}
+};
 
 /********************************************
  *  JOIN For Admin
@@ -147,7 +190,7 @@ exports.join = function(req, res, next) {
 		if (!user) {
 			return res.status(210).json(info);
 		}
-		connectionPool.getConnection(function(err,connection){
+		connectionPool.getConnection(function(err, connection){
 			if(err){
 				connection.release();
 				return res.status(210).json({
@@ -174,4 +217,4 @@ exports.join = function(req, res, next) {
 			});
 		});
 	})(req, res, next);
-}
+};
