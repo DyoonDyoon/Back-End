@@ -8,7 +8,7 @@ var tokenManager = require('./../controllers/tokenManager');
 
 var versionManager = require('../controllers/versionManager');
 
-exports.postLecture = function(req, res, next) {
+exports.post = function(req, res, next) {
 	var token = req.query['token'];
 	if (!token) {
 		return res.status(403).json({
@@ -159,7 +159,7 @@ exports.delete = function(req, res, next) {
 	});
 };
 
-exports.getLecture = function(req, res, next) {
+exports.get = function(req, res, next) {
 	var token = req.query['token'];
 	if (!token) {
 		return res.status(403).json({

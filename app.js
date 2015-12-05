@@ -6,6 +6,7 @@ var express = require('express');
 var passport = require('passport');
 var user = require('./models/user');
 var lecture = require('./models/lecture');
+var notification = require('./models/notification');
 var app = express();
 
 var logger = require('morgan');
@@ -33,12 +34,17 @@ app.get('/lecture_outline', function(req, res) {
 	});
 });
 
-app.get('/lecture', lecture.getLecture);
-app.post('/lecture', lecture.postLecture);
+app.get('/lecture', lecture.get);
+app.post('/lecture', lecture.post);
 app.delete('/lecture', lecture.delete);
 
 app.post('/login', passportConfig.logIn);
 app.post('/join', passportConfig.join);
+
+app.post('/notification', notification.post);
+app.get('/notification', notification.get);
+app.put('/notification', notification.update);
+app.delete('/notification', notification.delete);
 
 app.get('/users', user.list);
 

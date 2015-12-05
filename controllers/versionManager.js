@@ -12,9 +12,9 @@ exports.list = function(lectureKey, callback) {
 
 			var selectQuery = 'SELECT * FROM version WHERE lectureId = ?';
 			var selectParams = [lectureKey];
-			connection.query(selectQuery, function(err, results) {
+			connection.query(selectQuery, selectParams, function(err, results) {
 				connection.release();
-				if (err) return callback(err, null);
+				if (err) return callback(err, null);[]
 				return callback(null, results);
 			});
 		}
@@ -44,7 +44,7 @@ exports.setVersion = function(lectureKey, values, callback) {
 
 			var updateQuery = 'UPDATE version SET ? WHERE lectureId = ?';
 			var updateParams = [values, lectureKey];
-			connection.query(updateQuery, function(err, results) {
+			connection.query(updateQuery, updateParams, function(err, results) {
 				connection.release();
 				if (err) return callback(err, false);
 				return callback(err, true);

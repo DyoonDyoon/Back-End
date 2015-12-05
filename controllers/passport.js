@@ -23,8 +23,8 @@ passport.deserializeUser(function(user, done) {
 passport.use(
 	'login',
 	new localStrategy({
-			usernameField : 'id',
-			passwordField : 'pw'
+			usernameField : 'userId',
+			passwordField : 'password'
 		},
 		function(username, password, done) {
 			connectionPool.getConnection(function(err,connection){
@@ -69,8 +69,8 @@ passport.use(
 passport.use(
 	'join',
 	new localStrategy({
-			usernameField : 'id',
-			passwordField : 'pw'
+			usernameField : 'userId',
+			passwordField : 'password'
 		},
 		function(username, password, done) {
 			connectionPool.getConnection(function(err,connection){
@@ -107,13 +107,13 @@ passport.use(
  *  LOGIN
  ********************************************/
 exports.logIn = function(req, res, next) {
-	if (req.query['id'].length === 0)
+	if (!req.query['userId'])
 		return res.status(210).json({
 			'code': 10,
 			'message': 'No userId'
 		});
 
-	tokenManager.generateToken(req.query[ 'id' ], function (err, token) {
+	tokenManager.generateToken(req.query[ 'userId' ], function (err, token) {
 		if (err) return res.status(500).json(err.message);
 		passport.authenticate('login', function (err, user, info) {
 			if (err) {
@@ -140,12 +140,12 @@ exports.logIn = function(req, res, next) {
  *  JOIN For Admin
  ********************************************/
 exports.join = function(req, res, next) {
-	if (req.query['id'].length === 0)
+	if (!req.query['userId'])
 		return res.status(210).json({
 			'code': 10,
 			'message': 'No userId'
 		});
-	if (req.query['pw'].length === 0)
+	if (!req.query['password'])
 		return res.status(210).json({
 			'code': 10,
 			'message': 'No password'
