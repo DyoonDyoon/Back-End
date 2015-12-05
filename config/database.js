@@ -7,13 +7,13 @@ var alpha = {
 	user     : 'root',
 	password : '1234',
 	database : 'eclass'
-}
+};
 
 var general = {
 	host     : '192.168.1.171',
 	user     : 'minz',
 	password : 'S6T2wtDzH5y8WACv',
 	database : 'mini_e-class'
-}
+};
 
 module.exports = (target === 'ALPHA') ? alpha : general;
