@@ -35,6 +35,7 @@ app.get('/lecture_outline', function(req, res) {
 
 app.get('/lecture', lecture.getLecture);
 app.post('/lecture', lecture.postLecture);
+app.delete('/lecture', lecture.delete);
 
 app.post('/login', passportConfig.logIn);
 app.post('/join', passportConfig.join);

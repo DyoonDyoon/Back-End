@@ -49,7 +49,7 @@ exports.postLecture = function(req, res, next) {
 							return res.status(500).json(response);
 						}
 						var selectQuery = 'SELECT * FROM version WHERE lectureId = ?';
-						var selectParams = [req.query['lecture_id']];
+						var selectParams = [req.query['lectureId']];
 						connection.query(selectQuery, selectParams, function(err, results) {
 							if (err) {
 								connection.release();
@@ -58,7 +58,7 @@ exports.postLecture = function(req, res, next) {
 
 							var insertFunction = function() {
 								var insertQuery = 'INSERT INTO lecture(lectureId, userId) VALUES(?, ?)';
-								var insertParam = [req.query['lecture_id'], req.query['user_id']];
+								var insertParam = [req.query['lectureId'], req.query['userId']];
 								connection.query(insertQuery, insertParam, function(err, results) {
 									if (err) {
 										connection.release();
@@ -73,7 +73,7 @@ exports.postLecture = function(req, res, next) {
 							};
 
 							if (results.length == 0) {
-								versionManager.create(req.query['lecture_id'], function(err, didSucceed) {
+								versionManager.create(req.query['lectureId'], function(err, didSucceed) {
 									if (err) {
 										connection.release();
 										return res.status(500).json(err);
@@ -83,6 +83,74 @@ exports.postLecture = function(req, res, next) {
 							} else {
 								insertFunction();
 							}
+						});
+					}
+				);
+			});
+		});
+	});
+};
+
+exports.delete = function(req, res, next) {
+	var token = req.query['token'];
+	if (!token) {
+		return res.status(403).json({
+			"code" : 5,
+			"message" : "Invalid Access"
+		});
+	}
+
+	tokenManager.existsToken(token, function(err, exists) {
+		if (err || !exists)
+			return res.status(210).json({
+				'code' : 4,
+				'message' : 'Invalid token'
+			});
+		tokenManager.isExpired(token, function (err, status) {
+			if (err)
+				return res.status(500).json(err);
+
+			if (status.invalidToken)
+				return res.status(210).json({
+					'code'    : 4,
+					'message' : 'Invalid Token'
+				});
+			if (status.expired)
+				return res.status(210).json({
+					'code'    : 3,
+					'message' : 'session expired'
+				});
+			tokenManager.update(token, function(err, accessToken) {
+				var response = { "accessToken" : accessToken };
+				if (!req.query['userId']) {
+					response['message'] = 'no user id';
+					return res.status(210).json(response);
+				}
+				if (!req.query['lectureId']) {
+					response['message'] = 'no lecture id';
+					return res.status(210).json(response);
+				}
+				connectionPool.getConnection(
+					function(err, connection) {
+						if (err) {
+							connection.release();
+							response["message"] = "CANNOT delete Lecture";
+							res.status(500).json(response);
+							return;
+						}
+						var deleteQuery = 'DELETE FROM lecture WHERE userId = ? && lectureId = ?';
+						var deleteParam = [req.query['userId'], req.query['lectureId']];
+						connection.query(deleteQuery, deleteParam, function(err, results) {
+							if (err) {
+								connection.release();
+								response["message"] = "CANNOT delete Lecture";
+								res.status(500).json(response);
+								return;
+							}
+							connection.release();
+							response["message"] = "Success to delete lecture : " + req.query['lectureId']
+								+ ", id : " + req.query['userId'];
+							res.status(200).json(response);
 						});
 					}
 				);
@@ -131,7 +199,7 @@ exports.getLecture = function(req, res, next) {
 							return;
 						}
 						var selectQuery = 'SELECT * FROM lecture WHERE userId = ?';
-						var selectParam = [req.query['user_id']];
+						var selectParam = [req.query['userId']];
 						connection.query(selectQuery, selectParam, function(err, results) {
 							if (err) {
 								connection.release();
