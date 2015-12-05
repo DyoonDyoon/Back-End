@@ -22,7 +22,7 @@ app.get('/', function(req, res){
     res.send('Hello World');
 });
 
-app.get('/lectureOutline', function(req, res) {
+app.get('/lecture_outline', function(req, res) {
 	fs.readFile('./config/lectureConfig.json', 'utf8', function (err, data) {
 		if (err) {
 			res.status(500).json({"message" : "CANNOT find lecture outline information"});
