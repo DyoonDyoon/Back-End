@@ -31,7 +31,7 @@ passport.use(
 				if(err){
 					return done(null, false);
 				}
-				var selectSql = 'SELECT id, userId, password, name, major FROM user WHERE userId = ?';
+				var selectSql = 'SELECT * FROM user WHERE userId = ?';
 				connection.query(selectSql, [username], function(err,rows,fields){
 					if(err){
 						connection.release();
@@ -47,7 +47,7 @@ passport.use(
 					var user = {};
 					user.userId = rows[0].userId;
 					user.name = rows[0].name;
-					user.major = rows[0 ].major;
+					user.major = rows[0].major;
 					var sha1 = crypt.createHash('sha1');
 					sha1.update(password);
 					user.password = sha1.digest('hex');
@@ -58,6 +58,7 @@ passport.use(
 							'message' : 'no match password'
 						});
 					}
+					user.type = rows[0].type;
 					connection.release();
 					return done(null, user);
 				});
@@ -167,8 +168,9 @@ exports.join = function(req, res, next) {
 
 			user.major = req.query['major'];
 			user.name = req.query['name'];
-			var insertSql = 'INSERT INTO user(id, userId, password, name, major) VALUES(NULL, ?, ?, ?, ?)';
-			var queryParam = [user.userId, user.password, user.name, user.major];
+			user.type = req.query['type'];
+			var insertSql = 'INSERT INTO user(id, userId, password, name, major, type) VALUES(NULL, ?, ?, ?, ?, ?)';
+			var queryParam = [user.userId, user.password, user.name, user.major, user.type];
 			connection.query(insertSql, queryParam, function(err, results){
 				if(err) {
 					connection.release();
