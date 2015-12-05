@@ -5,7 +5,12 @@ var xlrd = require('node-xlrd');
 var fs = require('fs');
 var sheet = null;
 var lectureOutlines = [];
-xlrd.open('2015-2.xls', function(err, book) {
+var exec = require('child_process').exec;
+var config = require('../config/lectureConfig.json');
+
+config['version'] += 1;
+
+xlrd.open('./xls/'+ config['version'] +'.xls', function(err, book) {
 		sheet = book.sheet.byIndex(0);
 		for (var i = 1; i < sheet.row.count; ++i) {
 			l                 = {};
@@ -17,9 +22,24 @@ xlrd.open('2015-2.xls', function(err, book) {
 			l[ 'point' ]          = sheet.cell.getRaw(i, 9);
 			lectureOutlines.push(l);
 		}
-		fs.writeFile('./2015-2.json', JSON.stringify(lectureOutlines), function(err) {
+
+		fs.writeFile('./json/' + config['version'] + '.json', JSON.stringify(lectureOutlines), function(err) {
 			if(err) throw err;
 			console.log('File write completed : %d elements', lectureOutlines.length);
+			exec('git add ./json/' + config['version'] + '.json', function (error, stdout, stderr) {
+				if (error !== null) console.log('exec error: ' + error);
+				exec('git commit -m "add file ' + config['version'] + '.json"', function (error, stdout, stderr) {
+					if (error !== null) console.log('exec error: ' + error);
+					exec('git push origin master', function (error, stdout, stderr) {
+						if (error !== null) console.log('exec error: ' + error);
+						console.log('success for upload! : '+ config['version']+'.json');
+						config['URL'] = 'https://rawgit.com/DyoonDyoon/Back-End/master/script/json/'+config['version']+'.json';
+						fs.writeFile('../config/lectureConfig.json', JSON.stringify(config), function(err) {
+							if (err) throw err;
+						});
+					});
+				});
+			});
 		});
 	}
 );
