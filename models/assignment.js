@@ -8,13 +8,16 @@ var tokenManager = require('../controllers/tokenManager');
 var versionManager = require('../controllers/versionManager');
 
 /*******************************
- * notification Table structure
+ * assign Table structure
  *
  * id - INT :  (PRIMARY)
- * notiId - INT :
+ * assignId - INT :
  * lectureId - VARCHAR(30) :
  * title - TEXT :
  * description - TEXT :
+ * filePath - TEXT :
+ * startDate - TIMESTAMP :
+ * endDate - TIMESTAMP :
  * type - INT :
  * targetId - INT :
  *******************************/
@@ -25,6 +28,9 @@ exports.post = function(req, res, next) {
 	 * lectureId :
 	 * title :
 	 * description :
+	 * filPath : 보류
+	 * startDate :
+	 * endDate :
 	 *******************************/
 	var token = req.query['token'];
 	if (!token) {
@@ -78,16 +84,16 @@ exports.post = function(req, res, next) {
 								response['message'] = err.message;
 								return res.status(500).json(response);
 							}
-							response['notiVer'] = results[0]['notiVer']+1;
+							response['assignVer'] = results[0]['assignVer']+1;
 							param['type'] = 0;
-							param['notiId'] = results[0]['notiVer']+1;
-							versionManager.setVersion(param['lectureId'], {'notiVer' : param['notiId']}, function() {
+							param['assignId'] = results[0]['assignVer']+1;
+							versionManager.setVersion(param['lectureId'], {'assignVer' : param['assignId']}, function() {
 								if (err) {
 									connection.release();
 									response['message'] = err.message;
 									return res.status(500).json(response);
 								}
-								var insertQuery = 'INSERT INTO notification SET ?';
+								var insertQuery = 'INSERT INTO assignment SET ?';
 								var insertParam = [param];
 								connection.query(insertQuery, insertParam, function(err, results) {
 									if (err) {
@@ -96,7 +102,7 @@ exports.post = function(req, res, next) {
 										return res.status(500).json(response);
 									}
 									connection.release();
-									response["message"] = "Success for post notification";
+									response["message"] = "Success for post assignment";
 									return res.status(200).json(response);
 								});
 							});
@@ -169,10 +175,10 @@ exports.get = function(req, res, next) {
 								response[ 'message' ] = err.message;
 								return res.status(500).json(response);
 							}
-							response['notiVer'] = results[0]['notiVer'];
-							var selectQuery = 'SELECT * FROM notification WHERE notiId > ? && lectureId = ?';
-							var selectParam = [ req.query[ 'version' ], req.query[ 'lectureId' ] ];
-							connection.query(selectQuery, selectParam, function (err, results) {
+							response['assignVer'] = results[0]['assignVer'];
+							var insertQuery = 'SELECT * FROM assignment WHERE assignId > ? && lectureId = ?';
+							var insertParam = [ req.query[ 'version' ], req.query[ 'lectureId' ] ];
+							connection.query(insertQuery, insertParam, function (err, results) {
 								if (err) {
 									connection.release();
 									response[ 'message' ] = err.message;
@@ -195,9 +201,12 @@ exports.update = function(req, res, next) {
 	 * params
 	 *
 	 * lectureId :
-	 * notiId :
+	 * assignId :
 	 * title :
 	 * description :
+	 * filePath :
+	 * startDate :
+	 * endDate :
 	 *******************************/
 	var token = req.query['token'];
 	if (!token) {
@@ -242,8 +251,8 @@ exports.update = function(req, res, next) {
 							response['message'] = err.message;
 							return res.status(500).json(response);
 						}
-						var selectQuery = 'SELECT * FROM notification WHERE lectureId = ? && notiId = ? && type = 0';
-						var selectParams = [req.query['lectureId'], req.query['notiId']];
+						var selectQuery = 'SELECT * FROM assignment WHERE lectureId = ? && assignId = ? && type = 0';
+						var selectParams = [req.query['lectureId'], req.query['assignId']];
 						connection.query(selectQuery, selectParams, function(err, results) {
 							if (err) {
 								connection.release();
@@ -252,7 +261,7 @@ exports.update = function(req, res, next) {
 							}
 							if (results.length == 0) {
 								connection.release();
-								response['message'] = 'no created notification';
+								response['message'] = 'no created assignment';
 								return res.status(210).json(response);
 							}
 							versionManager.list(req.query[ 'lectureId' ], function (err, results) {
@@ -261,19 +270,19 @@ exports.update = function(req, res, next) {
 									response[ 'message' ] = err.message;
 									return res.status(500).json(response);
 								}
-								response[ 'notiVer' ] = results[ 0 ][ 'notiVer' ] + 1;
+								response[ 'assignVer' ] = results[ 0 ][ 'assignVer' ] + 1;
 								var param             = req.query;
 								delete param[ 'token' ];  // delete token
 								param[ 'type' ] = 1;  // update
-								param[ 'targetId' ] = req.query[ 'notiId' ];
-								param[ 'notiId' ]   = results[ 0 ][ 'notiVer' ] + 1;
-								versionManager.setVersion(req.query[ 'lectureId' ], { 'notiVer' : param[ 'notiId' ] }, function () {
+								param[ 'targetId' ] = req.query[ 'assignId' ];
+								param[ 'assignId' ]   = results[ 0 ][ 'assignVer' ] + 1;
+								versionManager.setVersion(req.query[ 'lectureId' ], { 'assignVer' : param[ 'assignId' ] }, function () {
 									if (err) {
 										connection.release();
 										response[ 'message' ] = err.message;
 										return res.status(500).json(response);
 									}
-									var insertQuery = 'INSERT INTO notification SET ?';
+									var insertQuery = 'INSERT INTO assignment SET ?';
 									var insertParam = [ param ];
 									connection.query(insertQuery, insertParam, function (err, results) {
 										if (err) {
@@ -282,7 +291,7 @@ exports.update = function(req, res, next) {
 											return res.status(500).json(response);
 										}
 										connection.release();
-										response[ "message" ] = "Success for update notification";
+										response[ "message" ] = "Success for update assignment";
 										return res.status(200).json(response);
 									});
 								});
@@ -300,7 +309,7 @@ exports.delete = function(req, res, next) {
 	 * params
 	 *
 	 * lectureId :
-	 * notiId :
+	 * assignId :
 	 *******************************/
 	var token = req.query['token'];
 	if (!token) {
@@ -334,8 +343,8 @@ exports.delete = function(req, res, next) {
 				if (err)
 					return res.status(210).json(err);
 				var response = { "accessToken" : accessToken };
-				if (!req.query['notiId']) {
-					response['message'] = 'no notification id';
+				if (!req.query['assignId']) {
+					response['message'] = 'no assignment id';
 					return res.status(210).json(response);
 				}
 				if (!req.query['lectureId']) {
@@ -350,8 +359,8 @@ exports.delete = function(req, res, next) {
 							res.status(500).json(response);
 							return;
 						}
-						var selectQuery = 'SELECT * FROM notification WHERE lectureId = ? && targetId = ? && type = 2';
-						var selectParams = [req.query['lectureId'], req.query['notiId']];
+						var selectQuery = 'SELECT * FROM assignment WHERE lectureId = ? && targetId = ? && type = 2';
+						var selectParams = [req.query['lectureId'], req.query['assignId']];
 						connection.query(selectQuery, selectParams, function(err, results) {
 							if (err) {
 								connection.release();
@@ -363,7 +372,7 @@ exports.delete = function(req, res, next) {
 								response['message'] = 'already deleted';
 								return res.status(210).json(response);
 							}
-							selectQuery = 'SELECT * FROM notification WHERE lectureId = ? && notiId = ? && type = 0';
+							selectQuery = 'SELECT * FROM assignment WHERE lectureId = ? && assignId = ? && type = 0';
 							connection.query(selectQuery, selectParams, function(err, results) {
 								if (err) {
 									connection.release();
@@ -372,7 +381,7 @@ exports.delete = function(req, res, next) {
 								}
 								if (results.length == 0) {
 									connection.release();
-									response['message'] = 'no created notification';
+									response['message'] = 'no created assignment';
 									return res.status(210).json(response);
 								}
 								versionManager.list(req.query['lectureId'], function(err, results) {
@@ -381,19 +390,19 @@ exports.delete = function(req, res, next) {
 										response['message'] = err.message;
 										return res.status(500).json(response);
 									}
-									response['notiVer'] = results[0]['notiVer']+1;
+									response['assignVer'] = results[0]['assignVer']+1;
 									var param = {};
 									param['type'] = 2;  // delete
 									param['lectureId'] = req.query['lectureId'];
-									param['targetId'] = req.query['notiId'];
-									param['notiId'] = results[0]['notiVer']+1;
-									versionManager.setVersion(req.query['lectureId'], {'notiVer' : param['notiId']}, function() {
+									param['targetId'] = req.query['assignId'];
+									param['assignId'] = results[0]['assignVer']+1;
+									versionManager.setVersion(req.query['lectureId'], {'assignVer' : param['assignId']}, function() {
 										if (err) {
 											connection.release();
 											response['message'] = err.message;
 											return res.status(500).json(response);
 										}
-										var insertQuery = 'INSERT INTO notification SET ?';
+										var insertQuery = 'INSERT INTO assignment SET ?';
 										var insertParam = [param];
 										connection.query(insertQuery, insertParam, function(err, results) {
 											if (err) {
@@ -402,7 +411,7 @@ exports.delete = function(req, res, next) {
 												return res.status(500).json(response);
 											}
 											connection.release();
-											response["message"] = "Success for delete notification";
+											response["message"] = "Success for delete assignment";
 											return res.status(200).json(response);
 										});
 									});

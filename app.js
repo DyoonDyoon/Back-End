@@ -7,10 +7,15 @@ var passport = require('passport');
 var user = require('./models/user');
 var lecture = require('./models/lecture');
 var notification = require('./models/notification');
+var assignment = require('./models/assignment');
+var grade = require('./models/grade');
 var app = express();
+var multer  = require('multer');
+var upload = multer({ dest: 'uploads/' });
 
 var logger = require('morgan');
 var passportConfig = require('./controllers/passport');
+var fileManager = require('./controllers/fileManager');
 var target = require('./target');
 var fs = require('fs');
 
@@ -45,6 +50,18 @@ app.post('/notification', notification.post);
 app.get('/notification', notification.get);
 app.put('/notification', notification.update);
 app.delete('/notification', notification.delete);
+
+app.post('/assignment', assignment.post);
+app.get('/assignment', assignment.get);
+app.put('/assignment', assignment.update);
+app.delete('/assignment', assignment.delete);
+
+app.post('/grade', grade.post);
+app.get('/grade', grade.get);
+app.put('/grade', grade.update);
+app.delete('/grade', grade.delete);
+
+app.post('/fileTest', upload.single('file'), fileManager.upload);
 
 app.get('/users', user.list);
 

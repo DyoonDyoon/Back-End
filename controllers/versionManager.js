@@ -4,6 +4,7 @@
 var dbConfig = require('../config/database');
 var mysql = require('mysql');
 var connectionPool = mysql.createPool(dbConfig);
+var async = require('async');
 
 exports.list = function(lectureKey, callback) {
 	connectionPool.getConnection(
@@ -51,4 +52,27 @@ exports.setVersion = function(lectureKey, values, callback) {
 			})
 		}
 	);
+};
+
+exports.get = function(req, res, next) {
+	connectionPool.getConnection(
+		function(err, connection) {
+			if (err) {
+				return res.status(500).json({ 'message' : err.message });
+			}
+			async.waterfall([
+					function(callback) {
+						var selectQuery = '';
+						var selectParam = [];
+						connection.query(selectQuery, selectParam, function(err, results) {
+							if (err) return callback(err);
+							return callback(null, results);
+						});
+					}
+				],
+				function (err, results) {
+
+				}
+			);
+		});
 };
