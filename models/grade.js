@@ -146,7 +146,7 @@ exports.get = function(req, res, next) {
 				} else if (!req.query['stuId']) {
 					key['lectureId'] = req.query['lectureId'];
 				} else {
-					key["stuId"] = req.query['stuId'];
+					key['stuId'] = req.query['stuId'];
 				}
 
 				connectionPool.getConnection(
@@ -215,8 +215,12 @@ exports.update = function(req, res, next) {
 				if (err)
 					return res.status(210).json(err);
 				var response = { "accessToken" : accessToken };
-				if (!req.query['title']) {
-					response['message'] = 'no title';
+				if (!req.query['gradeId']) {
+					response['message'] = 'no grade id';
+					return res.status(210).json(response);
+				}
+				if (!req.query['score']) {
+					response['message'] = 'no score';
 					return res.status(210).json(response);
 				}
 				connectionPool.getConnection(
@@ -282,12 +286,8 @@ exports.delete = function(req, res, next) {
 				if (err)
 					return res.status(210).json(err);
 				var response = { "accessToken" : accessToken };
-				if (!req.query['notiId']) {
-					response['message'] = 'no notification id';
-					return res.status(210).json(response);
-				}
-				if (!req.query['lectureId']) {
-					response['message'] = 'no lecture id';
+				if (!req.query['gradeId']) {
+					response['message'] = 'no grade id';
 					return res.status(210).json(response);
 				}
 				connectionPool.getConnection(
