@@ -1,6 +1,10 @@
 /**
  * Created by kweonminjun on 2015. 12. 6..
  */
+var dbConfig = require('../config/database');
+var mysql = require('mysql');
+var connectionPool = mysql.createPool(dbConfig);
+var tokenManager = require('../controllers/tokenManager');
 /*******************************
  * submit Table structure
  *
@@ -210,8 +214,8 @@ exports.update = function(req, res, next) {
 				if (err)
 					return res.status(210).json(err);
 				var response = { "accessToken" : accessToken };
-				if (!req.query['title']) {
-					response['message'] = 'no title';
+				if (!req.query['filePath']) {
+					response['message'] = 'no file';
 					return res.status(210).json(response);
 				}
 				connectionPool.getConnection(
@@ -221,15 +225,15 @@ exports.update = function(req, res, next) {
 							response['message'] = err.message;
 							return res.status(500).json(response);
 						}
-						var updateQuery = 'UPDATE grade SET score = ? WHERE gradeId = ?';
-						var updateParam = [req.query['score'], req.query['gradeId']];
+						var updateQuery = 'UPDATE submit SET filePath = ? WHERE submitId = ?';
+						var updateParam = [req.query['filePath'], req.query['submitId']];
 						connection.query(updateQuery, updateParam, function(err, results) {
 							connection.release();
 							if (err) {
 								response['message'] = err.message;
 								return res.status(500).json(response);
 							}
-							response['message'] = 'Success for update grade!';
+							response['message'] = 'Success for update submit!';
 							return res.json(response);
 						});
 					}
@@ -289,14 +293,14 @@ exports.delete = function(req, res, next) {
 							return res.status(500).json(response);
 						}
 						var deleteQuery = 'DELETE FROM submit WHERE submitId = ?';
-						var deleteParam = [req.query['submitID']];
+						var deleteParam = [req.query['submitId']];
 						connection.query(deleteQuery, deleteParam, function(err, results) {
 							connection.release();
 							if (err) {
 								response['message'] = err.message;
 								return res.status(500).json(response);
 							}
-							response['message'] = 'Success for delete grade!';
+							response['message'] = 'Success for delete submit!';
 							return res.json(response);
 						});
 					}

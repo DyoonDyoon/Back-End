@@ -2,13 +2,17 @@
  * Created by kweonminjun on 2015. 11. 22..
  */
 
-var express = require('express');
-var passport = require('passport');
 var user = require('./models/user');
 var lecture = require('./models/lecture');
 var notification = require('./models/notification');
 var assignment = require('./models/assignment');
 var grade = require('./models/grade');
+var submit = require('./models/submit');
+var question = require('./models/question');
+
+var express = require('express');
+var passport = require('passport');
+
 var app = express();
 var multer  = require('multer');
 var upload = multer({ dest: 'uploads/' });
@@ -56,10 +60,20 @@ app.get('/assignment', assignment.get);
 app.put('/assignment', assignment.update);
 app.delete('/assignment', assignment.delete);
 
+app.post('/submit', submit.post);
+app.get('/submit', submit.get);
+app.put('/submit', submit.update);
+app.delete('/submit', submit.delete);
+
 app.post('/grade', grade.post);
 app.get('/grade', grade.get);
 app.put('/grade', grade.update);
 app.delete('/grade', grade.delete);
+
+app.post('/question', question.post);
+app.get('/question', question.get);
+app.put('/question', question.update);
+app.delete('/question', question.delete);
 
 app.post('/fileTest', upload.single('file'), fileManager.upload);
 
