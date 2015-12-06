@@ -2,6 +2,7 @@
  * Created by kweonminjun on 2015. 11. 22..
  */
 
+// MODELS
 var user = require('./models/user');
 var lecture = require('./models/lecture');
 var notification = require('./models/notification');
@@ -9,6 +10,7 @@ var assignment = require('./models/assignment');
 var grade = require('./models/grade');
 var submit = require('./models/submit');
 var question = require('./models/question');
+var answer =  require('./models/answer');
 
 var express = require('express');
 var passport = require('passport');
@@ -74,6 +76,11 @@ app.post('/question', question.post);
 app.get('/question', question.get);
 app.put('/question', question.update);
 app.delete('/question', question.delete);
+
+app.post('/answer', answer.post);
+app.get('/answer', answer.get);
+app.put('/answer', answer.update);
+app.delete('/answer', answer.delete);
 
 app.post('/fileTest', upload.single('file'), fileManager.upload);
 
