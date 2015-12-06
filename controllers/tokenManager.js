@@ -18,7 +18,7 @@ var moment = require('moment');
  * createdAt - TIMESTAMP : when this token created
  * updatedAt - TIMESTAMP : when this token updated
  *******************************/
-exports.generateToken = function(uid, callback) {
+var generateToken = function(uid, callback) {
 	connectionPool.getConnection(
 		function (err, connection) {
 			if (err) return callback({ 'message' : err.message }, null);
@@ -48,7 +48,7 @@ exports.generateToken = function(uid, callback) {
 		});
 };
 
-exports.update = function(token, callback) {
+var update = function(token, callback) {
 	connectionPool.getConnection(
 		function (err, connection) {
 			if (err) {
@@ -71,7 +71,7 @@ exports.update = function(token, callback) {
 		});
 };
 
-exports.isExpired = function(token, callback) {
+var isExpired = function(token, callback) {
 	var status = {
 		'expired' : false,
 		'invalidToken' : false
@@ -104,7 +104,7 @@ exports.isExpired = function(token, callback) {
 	);
 };
 
-exports.existsToken = function(token, callback) {
+var existsToken = function(token, callback) {
 	connectionPool.getConnection(
 		function(err, connection) {
 			if (err) throw err;
@@ -121,3 +121,45 @@ exports.existsToken = function(token, callback) {
 		}
 	);
 };
+
+exports.onePassCheck = function(token, callback) {
+	if (!token) {
+		return callback(403,{
+			"code" : 5,
+			"message" : "Invalid Access"
+		});
+	}
+
+	existsToken(token, function(err, exists) {
+		if (err || !exists)
+			return callback(210,{
+				'code' : 4,
+				'message' : 'Invalid Token'
+			});
+		isExpired(token, function (err, status) {
+			if (err)
+				return callback(210,err);
+
+			if (status.invalidToken)
+				return callback(210,{
+					'code'    : 4,
+					'message' : 'Invalid Token'
+				});
+			if (status.expired)
+				return callback(210, {
+					'code'    : 3,
+					'message' : 'session expired'
+				});
+			update(token, function(err, accessToken) {
+				if (err)
+					return callback(210, err);
+				return callback(200, accessToken);
+			});
+		});
+	});
+};
+
+exports.generateToken = generateToken;
+exports.update = update;
+exports.isExpired = isExpired;
+exports.existsToken = existsToken;

@@ -4,6 +4,7 @@
 var dbConfig = require('../config/database');
 var mysql = require('mysql');
 var connectionPool = mysql.createPool(dbConfig);
+var tokenManager = require('../controllers/tokenManager');
 
 exports.list = function (req, res) {
 	connectionPool.getConnection(function (err, connection) {
@@ -15,29 +16,49 @@ exports.list = function (req, res) {
   });
 };
 
-/*************************************
- * the attributes which could be
- *
- * password - SHA1
- * major -
- * name -
- *************************************/
 exports.update = function (req, res, next) {
-	connectionPool.getConnection(function (err, connection) {
-		var updateSql = 'UPDATE user SET ? WHERE uid = ?';
-		var updateParams = [];
-		if (req.query['password']) {
+	/*******************************
+	 * params
+	 *
+	 * userId :
+	 * password :
+	 * major :
+	 * name :
+	 *******************************/
+	var token = req.query['token'];
+	tokenManager.onePassCheck(token, function(code, result) {
+		if (code !== 200)
+			return res.status(code).json(result);
 
+		var response = { "accessToken" : result };
+		if (!req.query['userId']) {
+			response['message'] = 'no user id';
+			return res.status(210).json(response);
 		}
-		if (req.query['major']) {
+		var param = req.query;
+		var userId = req.query['userId'];
+		delete param['token'];
+		delete param['userId'];
 
-		}
-		if (req.query['name']) {
-
-		}
-
-		connection.query(updateSql, updateParams, function (err, rows, fields) {
-
-		});
-	})
+		connectionPool.getConnection(
+			function(err, connection) {
+				connection.release();
+				if (err) {
+					response['message'] = err.message;
+					return res.status(500).json(response);
+				}
+				var updateQuery = 'UPDATE user SET ? WHERE userId = ?';
+				var updateParam = [param, userId];
+				connection.query(updateQuery, updateParam, function(err, results) {
+					if (err) {
+						response['message'] = err.message;
+						return res.status(500).json(response);
+					}
+					response['message'] = 'Success for update user information';
+					return res.status(200).json(response);
+				});
+			}
+		);
+	});
 };
+

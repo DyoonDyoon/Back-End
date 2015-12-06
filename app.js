@@ -82,6 +82,8 @@ app.get('/answer', answer.get);
 app.put('/answer', answer.update);
 app.delete('/answer', answer.delete);
 
+app.put('/user', user.update);
+
 app.post('/fileTest', upload.single('file'), fileManager.upload);
 
 app.get('/users', user.list);
