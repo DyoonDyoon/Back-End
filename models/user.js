@@ -25,21 +25,22 @@ exports.update = function (req, res, next) {
 	 * major :
 	 * name :
 	 *******************************/
+	if (!req.query['userId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no user id'
+		});
+	}
 	var token = req.query['token'];
 	tokenManager.onePassCheck(token, function(code, result) {
 		if (code !== 200)
 			return res.status(code).json(result);
 
 		var response = { "accessToken" : result };
-		if (!req.query['userId']) {
-			response['message'] = 'no user id';
-			return res.status(210).json(response);
-		}
 		var param = req.query;
 		var userId = req.query['userId'];
 		delete param['token'];
 		delete param['userId'];
-
 		connectionPool.getConnection(
 			function(err, connection) {
 				connection.release();
