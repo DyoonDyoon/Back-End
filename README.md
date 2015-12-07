@@ -36,9 +36,6 @@
 ###Parameter
 * userId - 아이디
 * password - 비밀번호
-* name - 이름
-* major - 전공
-* type - 0: 학생 / 1: 교수 / 2: 관리자
 
 ### Response
 	
@@ -94,7 +91,9 @@
 ###Parameter
 * userId - 아이디
 * password - 비밀번호			
-	
+* name - 이름 [optional]
+* major - 전공 [optional]
+* type - 0: 학생 / 1: 교수 / 2: 관리자
 ###Response
 
 * **정상처리**
