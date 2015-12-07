@@ -28,20 +28,23 @@ exports.post = function(req, res, next) {
 	 * lectureId :
 	 * title :
 	 * description :
-	 * filPath : 보류
+	 * filePath : 보류
 	 * startDate :
 	 * endDate :
 	 *******************************/
+	if (!req.query['title'] || !req.query['lectureId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no \'title\' or \'lecture id\''
+		});
+	}
+
 	var token = req.query[ 'token' ];
 	tokenManager.onePassCheck(token, function (code, result) {
 		if (code != 200)
 			return res.status(code).json(result);
 
 		var response = { "accessToken" : result };
-		if (!req.query[ 'title' ]) {
-			response[ 'message' ] = 'no title';
-			return res.status(210).json(response);
-		}
 		versionManager.list(req.query[ 'lectureId' ], function (err, results) {
 			if (err) {
 				response[ 'message' ] = err.message;
@@ -90,20 +93,25 @@ exports.get = function(req, res, next) {
 	 * lectureId :
 	 * version :
 	 *******************************/
+	if (!req.query['lectureId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no lecture id'
+		});
+	}
+	if (!req.query['version']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no version'
+		});
+	}
+
 	var token = req.query['token'];
 	tokenManager.onePassCheck(token, function(code, result) {
 		if (code != 200)
 			return res.status(code).json(result);
 
 		var response = { "accessToken" : result };
-		if (!req.query['lectureId']) {
-			response['message'] = 'no lectureId';
-			return res.status(210).json(response);
-		}
-		if (!req.query['version']) {
-			response['message'] = 'no version';
-			return res.status(210).json(response);
-		}
 		versionManager.list(req.query['lectureId'], function(err, results) {
 			if (err) {
 				connection.release();
@@ -150,15 +158,18 @@ exports.update = function(req, res, next) {
 	 * endDate :
 	 *******************************/
 	var token = req.query['token'];
+	if (!req.query['assignId'] || !req.query['lectureId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no \'assign id\' or \'lecture id\''
+		});
+	}
+
 	tokenManager.onePassCheck(token, function(code, result) {
 		if (code != 200)
 			return res.status(code).json(result);
 
 		var response = { "accessToken" : result };
-		if (!req.query['title']) {
-			response['message'] = 'no title';
-			return res.status(210).json(response);
-		}
 		connectionPool.getConnection(
 			function(err, connection) {
 				if (err) {
@@ -224,20 +235,18 @@ exports.delete = function(req, res, next) {
 	 * lectureId :
 	 * assignId :
 	 *******************************/
+	if (!req.query['assignId'] || !req.query['lectureId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no \'assign id\' or \'lecture id\''
+		});
+	}
 	var token = req.query['token'];
-	tokenManager.onePassCheck(err, function(code, result) {
+	tokenManager.onePassCheck(token, function(code, result) {
 		if (code != 200)
 			return res.status(code).json(result);
 
 		var response = { "accessToken" : result };
-		if (!req.query['assignId']) {
-			response['message'] = 'no assignment id';
-			return res.status(210).json(response);
-		}
-		if (!req.query['lectureId']) {
-			response['message'] = 'no lecture id';
-			return res.status(210).json(response);
-		}
 		connectionPool.getConnection(
 			function(err, connection) {
 				if (err) {

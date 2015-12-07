@@ -23,77 +23,55 @@ exports.post = function(req, res, next) {
 	 * stuId :
 	 * filePath :
 	 *******************************/
-	var token = req.query['token'];
-	if (!token) {
-		return res.status(403).json({
-			"code" : 5,
-			"message" : "Invalid Access"
+	if (!req.query['lectureId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no lecture id'
+		});
+	}
+	if (!req.query['assignId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no assignment id'
+		});
+	}
+	if (!req.query['stuId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no student id'
 		});
 	}
 
-	tokenManager.existsToken(token, function(err, exists) {
-		if (err || !exists)
-			return res.status(210).json({
-				'code' : 4,
-				'message' : 'Invalid Token'
-			});
-		tokenManager.isExpired(token, function (err, status) {
-			if (err)
-				return res.status(210).json(err);
+	var token = req.query['token'];
+	tokenManager.onePassCheck(token, function(code, result) {
+		if (code != 200)
+			return res.status(code).json(result);
 
-			if (status.invalidToken)
-				return res.status(210).json({
-					'code'    : 4,
-					'message' : 'Invalid Token'
-				});
-			if (status.expired)
-				return res.status(210).json({
-					'code'    : 3,
-					'message' : 'session expired'
-				});
-			tokenManager.update(token, function(err, accessToken) {
-				if (err)
-					return res.status(210).json(err);
-				var response = { "accessToken" : accessToken };
-				if (!req.query['lectureId']) {
-					response['message'] = 'no lecture id';
-					return res.status(210).json(response);
+		var response = { "accessToken" : result };
+		connectionPool.getConnection(
+			function(err, connection) {
+				if (err) {
+					connection.release();
+					response['message'] = err.message;
+					res.status(500).json(response);
+					return;
 				}
-				if (!req.query['assignId']) {
-					response['message'] = 'no assignment id';
-					return res.status(210).json(response);
-				}
-				if (!req.query['stuId']) {
-					response['message'] = 'no student id';
-					return res.status(210).json(response);
-				}
-				connectionPool.getConnection(
-					function(err, connection) {
-						if (err) {
-							connection.release();
-							response['message'] = err.message;
-							res.status(500).json(response);
-							return;
-						}
-						var param = req.query;
-						delete param['token'];
+				var param = req.query;
+				delete param['token'];
 
-						var insertQuery = 'INSERT INTO submit SET ?';
-						var insertParam = [param];
-						connection.query(insertQuery, insertParam, function(err, results) {
-							if (err) {
-								connection.release();
-								response['message'] = err.message;
-								return res.status(500).json(response);
-							}
-							connection.release();
-							response["message"] = "Success for post submit";
-							return res.status(200).json(response);
-						});
+				var insertQuery = 'INSERT INTO submit SET ?';
+				var insertParam = [param];
+				connection.query(insertQuery, insertParam, function(err, results) {
+					connection.release();
+					if (err) {
+						response['message'] = err.message;
+						return res.status(500).json(response);
 					}
-				);
-			});
-		});
+					response["message"] = "Success for post submit";
+					return res.status(200).json(response);
+				});
+			}
+		);
 	});
 };
 
@@ -101,77 +79,51 @@ exports.get = function(req, res, next) {
 	/*******************************
 	 * params
 	 *
-	 * stuId :
+	 * lectureId :
+	 * stuId :  for student
 	 * assignId :
 	 *
 	 * choose one option
 	 *******************************/
-	var token = req.query['token'];
-	if (!token) {
-		return res.status(403).json({
-			"code" : 5,
-			"message" : "Invalid Access"
+	if (!req.query['lectureId'] || !req.query['assignId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no \'lecture id\' or \'assignment id\''
 		});
 	}
+	var token = req.query['token'];
+	tokenManager.onePassCheck(token, function(code, result) {
+		if (code != 200)
+			return res.status(code).json(result);
 
-	tokenManager.existsToken(token, function(err, exists) {
-		if (err || !exists)
-			return res.status(210).json({
-				'code' : 4,
-				'message' : 'Invalid token'
-			});
-		tokenManager.isExpired(token, function (err, status) {
-			if (err)
-				return res.status(210).json(err);
+		var response = { "accessToken" : result };
 
-			if (status.invalidToken)
-				return res.status(210).json({
-					'code'    : 4,
-					'message' : 'Invalid Token'
-				});
-			if (status.expired)
-				return res.status(210).json({
-					'code'    : 3,
-					'message' : 'session expired'
-				});
-			tokenManager.update(token, function(err, accessToken) {
-				if (err)
-					return res.status(210).json(err);
-				var response = { "accessToken" : accessToken };
-				var key = {};
-				if (!req.query['assignId'] && !req.query['stuId']) {
-					response[ 'message' ] = 'no assginment id & no student id';
-					return res.status(210).json(response);
-				} else if (!req.query['stuId']) {
-					key['assignId'] = req.query['assignId'];
-				} else {
-					key["stuId"] = req.query['stuId'];
+		connectionPool.getConnection(
+			function(err, connection) {
+				if (err) {
+					connection.release();
+					response['message'] = err.message;
+					res.status(500).json(response);
+					return;
 				}
-
-				connectionPool.getConnection(
-					function(err, connection) {
-						if (err) {
-							connection.release();
-							response['message'] = err.message;
-							res.status(500).json(response);
-							return;
-						}
-						var selectQuery = 'SELECT * FROM submit WHERE ?';
-						var selectParam = [key];
-						connection.query(selectQuery, selectParam, function (err, results) {
-							if (err) {
-								connection.release();
-								response[ 'message' ] = err.message;
-								return res.status(500).json(response);
-							}
-							connection.release();
-							response[ "content" ] = results;
-							return res.status(200).json(response);
-						});
+				var selectQuery = 'SELECT * FROM submit WHERE lectureId = ? && assignId = ?';
+				var selectParam = [req.query['lectureId'], req.query['assignId']];
+				if (req.query['stuId']) {
+					selectQuery = selectQuery + ' && stuId = ?';
+					selectParam.push(req.query['stuId']);
+				}
+				console.log(selectQuery);
+				connection.query(selectQuery, selectParam, function (err, results) {
+					connection.release();
+					if (err) {
+						response[ 'message' ] = err.message;
+						return res.status(500).json(response);
 					}
-				);
-			});
-		});
+					response[ "content" ] = results;
+					return res.status(200).json(response);
+				});
+			}
+		);
 	});
 };
 
@@ -182,64 +134,40 @@ exports.update = function(req, res, next) {
 	 * submitId :  (PRIMARY)
 	 * filePath :
 	 *******************************/
-	var token = req.query['token'];
-	if (!token) {
-		return res.status(403).json({
-			"code" : 5,
-			"message" : "Invalid Access"
+	if (!req.query['filePath'] || !req.query['submitId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no \'file path\' or \'submit id\''
 		});
 	}
+	var token = req.query['token'];
+	tokenManager.onePassCheck(token, function(code, result) {
+		if (code != 200)
+			return res.status(code).json(result);
 
-	tokenManager.existsToken(token, function(err, exists) {
-		if (err || !exists)
-			return res.status(210).json({
-				'code' : 4,
-				'message' : 'Invalid token'
-			});
-		tokenManager.isExpired(token, function (err, status) {
-			if (err)
-				return res.status(210).json(err);
+		var response = { "accessToken" : result };
 
-			if (status.invalidToken)
-				return res.status(210).json({
-					'code'    : 4,
-					'message' : 'Invalid Token'
-				});
-			if (status.expired)
-				return res.status(210).json({
-					'code'    : 3,
-					'message' : 'session expired'
-				});
-			tokenManager.update(token, function(err, accessToken) {
-				if (err)
-					return res.status(210).json(err);
-				var response = { "accessToken" : accessToken };
-				if (!req.query['filePath']) {
-					response['message'] = 'no file';
-					return res.status(210).json(response);
+		connectionPool.getConnection(
+			function(err, connection) {
+				if (err) {
+					connection.release();
+					response['message'] = err.message;
+					return res.status(500).json(response);
 				}
-				connectionPool.getConnection(
-					function(err, connection) {
-						if (err) {
-							connection.release();
-							response['message'] = err.message;
-							return res.status(500).json(response);
-						}
-						var updateQuery = 'UPDATE submit SET filePath = ? WHERE submitId = ?';
-						var updateParam = [req.query['filePath'], req.query['submitId']];
-						connection.query(updateQuery, updateParam, function(err, results) {
-							connection.release();
-							if (err) {
-								response['message'] = err.message;
-								return res.status(500).json(response);
-							}
-							response['message'] = 'Success for update submit!';
-							return res.json(response);
-						});
+				var updateQuery = 'UPDATE submit SET filePath = ? WHERE submitId = ?';
+				var updateParam = [req.query['filePath'], req.query['submitId']];
+				connection.query(updateQuery, updateParam, function(err, results) {
+					connection.release();
+					if (err) {
+						response['message'] = err.message;
+						return res.status(500).json(response);
 					}
-				);
-			});
-		});
+					response['message'] = 'Success for update submit!';
+					return res.json(response);
+				});
+			}
+		);
+
 	});
 };
 
@@ -249,63 +177,36 @@ exports.delete = function(req, res, next) {
 	 *
 	 * submitId :
 	 *******************************/
-	var token = req.query['token'];
-	if (!token) {
-		return res.status(403).json({
-			"code" : 5,
-			"message" : "Invalid Access"
+	if (!req.query['submitId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no submit id'
 		});
 	}
-
-	tokenManager.existsToken(token, function(err, exists) {
-		if (err || !exists)
-			return res.status(210).json({
-				'code' : 4,
-				'message' : 'Invalid token'
-			});
-		tokenManager.isExpired(token, function (err, status) {
-			if (err)
-				return res.status(210).json(err);
-
-			if (status.invalidToken)
-				return res.status(210).json({
-					'code'    : 4,
-					'message' : 'Invalid Token'
-				});
-			if (status.expired)
-				return res.status(210).json({
-					'code'    : 3,
-					'message' : 'session expired'
-				});
-			tokenManager.update(token, function(err, accessToken) {
-				if (err)
-					return res.status(210).json(err);
-				var response = { "accessToken" : accessToken };
-				if (!req.query['submitId']) {
-					response['message'] = 'no submit id';
-					return res.status(210).json(response);
+	var token = req.query['token'];
+	tokenManager.onePassCheck(token, function(code, result) {
+		if (code != 200)
+			return res.status(code).json(result);
+		var response = { "accessToken" : result };
+		connectionPool.getConnection(
+			function(err, connection) {
+				if (err) {
+					connection.release();
+					response['message'] = err.message;
+					return res.status(500).json(response);
 				}
-				connectionPool.getConnection(
-					function(err, connection) {
-						if (err) {
-							connection.release();
-							response['message'] = err.message;
-							return res.status(500).json(response);
-						}
-						var deleteQuery = 'DELETE FROM submit WHERE submitId = ?';
-						var deleteParam = [req.query['submitId']];
-						connection.query(deleteQuery, deleteParam, function(err, results) {
-							connection.release();
-							if (err) {
-								response['message'] = err.message;
-								return res.status(500).json(response);
-							}
-							response['message'] = 'Success for delete submit!';
-							return res.json(response);
-						});
+				var deleteQuery = 'DELETE FROM submit WHERE submitId = ?';
+				var deleteParam = [req.query['submitId']];
+				connection.query(deleteQuery, deleteParam, function(err, results) {
+					connection.release();
+					if (err) {
+						response['message'] = err.message;
+						return res.status(500).json(response);
 					}
-				);
-			});
-		});
+					response['message'] = 'Success for delete submit!';
+					return res.json(response);
+				});
+			}
+		);
 	});
 };

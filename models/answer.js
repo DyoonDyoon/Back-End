@@ -19,21 +19,19 @@ exports.post = function(req, res, next) {
 	 * questionId :
 	 * content :
 	 *******************************/
+	if (!req.query['questionId'] || !req.query['content']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no \'question id\' or \'content\''
+		});
+	}
+
 	var token = req.query['token'];
 	tokenManager.onePassCheck(token, function(code, result) {
 		if (code != 200)
 			return res.status(code).json(result);
 
 		var response = { "accessToken" : result };
-		if (!req.query['question id']) {
-			response['message'] = 'no question id';
-			return res.status(210).json(response);
-		}
-		if (!req.query['content']) {
-			response['message'] = 'no content';
-			return res.status(210).json(response);
-		}
-
 		connectionPool.getConnection(
 			function(err, connection) {
 				if (err) {
@@ -67,16 +65,19 @@ exports.get = function(req, res, next) {
 	 *
 	 * questionId :
 	 *******************************/
+	if (!req.query['questionId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no question id'
+		});
+	}
+
 	var token = req.query['token'];
 	tokenManager.onePassCheck(token, function(code, result) {
 		if (code != 200)
 			return res.status(code).json(result);
 
-		var response = { "accessToken" : accessToken };
-		if (!req.query['questionId']) {
-			response[ 'message' ] = 'no question id';
-			return res.status(210).json(response);
-		}
+		var response = { "accessToken" : result };
 
 		connectionPool.getConnection(
 			function(err, connection) {
@@ -115,21 +116,19 @@ exports.update = function(req, res, next) {
 	 * answerId :  (PRIMARY)
 	 * content :
 	 *******************************/
+	if (!req.query['answerId'] || !req.query['content']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no \'answer id\' or \'content\''
+		});
+	}
+
 	var token = req.query['token'];
 	tokenManager.onePassCheck(token, function(code, result) {
 		if (code != 200)
 			return res.status(code).json(result);
 
-		var response = { "accessToken" : accessToken };
-		if (!req.query['answerId']) {
-			response['message'] = 'no answerId';
-			return res.status(210).json(response);
-		}
-		if (!req.query['content']) {
-			response['message'] = 'no content';
-			return res.status(210).json(response);
-		}
-
+		var response = { "accessToken" : result };
 		connectionPool.getConnection(
 			function(err, connection) {
 				if (err) {
@@ -159,17 +158,19 @@ exports.delete = function(req, res, next) {
 	 *
 	 * answerId :
 	 *******************************/
+	if (!req.query['answerId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no answer id'
+		});
+	}
+
 	var token = req.query['token'];
 	tokenManager.onePassCheck(token, function(code, result) {
 		if (code != 200)
 			return res.status(code).json(result);
 
-		var response = { "accessToken" : accessToken };
-		if (!req.query['answerId']) {
-			response['message'] = 'no answer id';
-			return res.status(210).json(response);
-		}
-
+		var response = { "accessToken" : result };
 		connectionPool.getConnection(
 			function(err, connection) {
 				if (err) {

@@ -112,6 +112,11 @@ exports.logIn = function(req, res, next) {
 			'code': 10,
 			'message': 'No userId'
 		});
+	if (!req.query['password'])
+		return res.status(210).json({
+			'code': 10,
+			'message': 'No password'
+		});
 
 	tokenManager.generateToken(req.query[ 'userId' ], function (err, token) {
 		if (err) return res.status(500).json(err.message);

@@ -9,8 +9,8 @@ var tokenManager = require('../controllers/tokenManager');
 exports.list = function (req, res) {
 	connectionPool.getConnection(function (err, connection) {
     connection.query('SELECT * FROM user', function (err, rows, fields) {
-      if (err) throw err;
 	    connection.release();
+      if (err) throw err;
       return res.json(rows);
     });
   });

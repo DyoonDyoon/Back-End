@@ -24,24 +24,31 @@ exports.post = function(req, res, next) {
 	 * stuId :
 	 * score :
 	 *******************************/
+	if (!req.query['lectureId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no lecture id'
+		});
+	}
+	if (!req.query['submitId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no submit id'
+		});
+	}
+	if (!req.query['stuId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no student id'
+		});
+	}
+
 	var token = req.query['token'];
 	tokenManager.onePassCheck(token, function(code, result) {
 		if (code != 200)
 			return res.status(code).json(result);
 
 		var response = { "accessToken" : result };
-		if (!req.query['lectureId']) {
-			response['message'] = 'no lecture id';
-			return res.status(210).json(response);
-		}
-		if (!req.query['submitId']) {
-			response['message'] = 'no submit id';
-			return res.status(210).json(response);
-		}
-		if (!req.query['stuId']) {
-			response['message'] = 'no student id';
-			return res.status(210).json(response);
-		}
 		connectionPool.getConnection(
 			function(err, connection) {
 				if (err) {
@@ -77,6 +84,14 @@ exports.get = function(req, res, next) {
 	 * stuId :
 	 * lectureId :
 	 *******************************/
+	var key = {};
+	if (!req.query['lectureId'] && !req.query['stuId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no \'lecture id\' & \'student id\''
+		});
+	}
+
 	var token = req.query['token'];
 
 	tokenManager.onePassCheck(token, function(code, result) {
@@ -84,18 +99,6 @@ exports.get = function(req, res, next) {
 			return res.status(code).json(result);
 
 		var response = { "accessToken" : result };
-		var key = {};
-		if (!req.query['lectureId'] && !req.query['stuId']) {
-			response[ 'message' ] = 'no lecture id & no student id';
-			return res.status(210).json(response);
-		}
-
-		if (req.query['stuId']) {
-			key['stuId'] = req.query['stuId'];
-		}
-		if (req.query['lectureId']) {
-			key['lectureId'] = req.query['lectureId'];
-		}
 
 		connectionPool.getConnection(
 			function(err, connection) {
@@ -105,8 +108,18 @@ exports.get = function(req, res, next) {
 					res.status(500).json(response);
 					return;
 				}
-				var selectQuery = 'SELECT * FROM grade WHERE ?';
-				var selectParam = [key];
+				var selectQuery = 'SELECT * FROM grade WHERE ';
+				var selectParam = [];
+				if (req.query['lectureId']) {
+					selectQuery = selectQuery + 'lecture Id = ?';
+					selectParam.push(req.query['lectureId']);
+				}
+				if (req.query['stuId']) {
+					if (req.query['lectureId'])
+						selectQuery = selectQuery + ' && ';
+					selectQuery = selectQuery + 'stuId = ?';
+					selectParam.push(req.query['stuId']);
+				}
 				connection.query(selectQuery, selectParam, function (err, results) {
 					connection.release();
 					if (err) {
@@ -128,20 +141,25 @@ exports.update = function(req, res, next) {
 	 * gradeId :  (PRIMARY)
 	 * score :
 	 *******************************/
+	if (!req.query['gradeId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no grade id'
+		});
+	}
+	if (!req.query['score']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no score'
+		});
+	}
+
 	var token = req.query['token'];
 	tokenManager.onePassCheck(token, function(code, result) {
 		if (code != 200)
 			return res.status(code).json(result);
 
-		var response = { "accessToken" : accessToken };
-		if (!req.query['gradeId']) {
-			response['message'] = 'no grade id';
-			return res.status(210).json(response);
-		}
-		if (!req.query['score']) {
-			response['message'] = 'no score';
-			return res.status(210).json(response);
-		}
+		var response = { "accessToken" : result };
 		connectionPool.getConnection(
 			function(err, connection) {
 				if (err) {
@@ -171,16 +189,18 @@ exports.delete = function(req, res, next) {
 	 *
 	 * gradeId :
 	 *******************************/
+	if (!req.query['gradeId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no grade id'
+		});
+	}
 	var token = req.query['token'];
 	tokenManager.onePassCheck(token, function(code, result) {
 		if (code != 200)
 			return res.status(code).json(result);
 
-		var response = { "accessToken" : accessToken };
-		if (!req.query['gradeId']) {
-			response['message'] = 'no grade id';
-			return res.status(210).json(response);
-		}
+		var response = { "accessToken" : result };
 		connectionPool.getConnection(
 			function(err, connection) {
 				if (err) {

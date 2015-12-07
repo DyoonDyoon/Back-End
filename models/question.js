@@ -21,77 +21,42 @@ exports.post = function(req, res, next) {
 	 * stuId :
 	 * content :
 	 *******************************/
-	var token = req.query['token'];
-	if (!token) {
-		return res.status(403).json({
-			"code" : 5,
-			"message" : "Invalid Access"
+	if (!req.query['lectureId'] || !req.query['stuId'] || !req.query['content']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no \'lecture id\' or \'student id\' or \'content\''
 		});
 	}
-
-	tokenManager.existsToken(token, function(err, exists) {
-		if (err || !exists)
-			return res.status(210).json({
-				'code' : 4,
-				'message' : 'Invalid Token'
-			});
-		tokenManager.isExpired(token, function (err, status) {
-			if (err)
-				return res.status(210).json(err);
-
-			if (status.invalidToken)
-				return res.status(210).json({
-					'code'    : 4,
-					'message' : 'Invalid Token'
-				});
-			if (status.expired)
-				return res.status(210).json({
-					'code'    : 3,
-					'message' : 'session expired'
-				});
-			tokenManager.update(token, function(err, accessToken) {
-				if (err)
-					return res.status(210).json(err);
-				var response = { "accessToken" : accessToken };
-				if (!req.query['lectureId']) {
-					response['message'] = 'no lecture id';
-					return res.status(210).json(response);
+	var token = req.query['token'];
+	tokenManager.onePassCheck(token, function(code, result) {
+		if (code != 200)
+			return res.status(code).json(result);
+		var response = { "accessToken" : result };
+		connectionPool.getConnection(
+			function(err, connection) {
+				if (err) {
+					connection.release();
+					response['message'] = err.message;
+					res.status(500).json(response);
+					return;
 				}
-				if (!req.query['stuId']) {
-					response['message'] = 'no student id';
-					return res.status(210).json(response);
-				}
-				if (!req.query['content']) {
-					response['message'] = 'no content';
-					return res.status(210).json(response);
-				}
-				connectionPool.getConnection(
-					function(err, connection) {
-						if (err) {
-							connection.release();
-							response['message'] = err.message;
-							res.status(500).json(response);
-							return;
-						}
-						var param = req.query;
-						delete param['token'];
+				var param = req.query;
+				delete param['token'];
 
-						var insertQuery = 'INSERT INTO question SET ?';
-						var insertParam = [param];
-						connection.query(insertQuery, insertParam, function(err, results) {
-							if (err) {
-								connection.release();
-								response['message'] = err.message;
-								return res.status(500).json(response);
-							}
-							connection.release();
-							response["message"] = "Success for post question";
-							return res.status(200).json(response);
-						});
+				var insertQuery = 'INSERT INTO question SET ?';
+				var insertParam = [param];
+				connection.query(insertQuery, insertParam, function(err, results) {
+					if (err) {
+						connection.release();
+						response['message'] = err.message;
+						return res.status(500).json(response);
 					}
-				);
-			});
-		});
+					connection.release();
+					response["message"] = "Success for post question";
+					return res.status(200).json(response);
+				});
+			}
+		);
 	});
 };
 
@@ -104,72 +69,45 @@ exports.get = function(req, res, next) {
 	 *
 	 * choose one option
 	 *******************************/
-	var token = req.query['token'];
-	if (!token) {
-		return res.status(403).json({
-			"code" : 5,
-			"message" : "Invalid Access"
+	var key = {};
+	if (!req.query['lectureId'] && !req.query['stuId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no \'lecture id\' or \'student id\''
 		});
+	} else if (!req.query['stuId']) {
+		key['lectureId'] = req.query['lectureId'];
+	} else {
+		key["stuId"] = req.query['stuId'];
 	}
 
-	tokenManager.existsToken(token, function(err, exists) {
-		if (err || !exists)
-			return res.status(210).json({
-				'code' : 4,
-				'message' : 'Invalid token'
-			});
-		tokenManager.isExpired(token, function (err, status) {
-			if (err)
-				return res.status(210).json(err);
+	var token = req.query['token'];
+	tokenManager.onePassCheck(token, function(code, result) {
+		if (code != 200)
+			return res.status(code).json(result);
 
-			if (status.invalidToken)
-				return res.status(210).json({
-					'code'    : 4,
-					'message' : 'Invalid Token'
-				});
-			if (status.expired)
-				return res.status(210).json({
-					'code'    : 3,
-					'message' : 'session expired'
-				});
-			tokenManager.update(token, function(err, accessToken) {
-				if (err)
-					return res.status(210).json(err);
-				var response = { "accessToken" : accessToken };
-				var key = {};
-				if (!req.query['lectureId'] && !req.query['stuId']) {
-					response[ 'message' ] = 'no lecture id & no student id';
-					return res.status(210).json(response);
-				} else if (!req.query['stuId']) {
-					key['lectureId'] = req.query['lectureId'];
-				} else {
-					key["stuId"] = req.query['stuId'];
+		var response = { "accessToken" : result };
+		connectionPool.getConnection(
+			function(err, connection) {
+				if (err) {
+					connection.release();
+					response['message'] = err.message;
+					res.status(500).json(response);
+					return;
 				}
-
-				connectionPool.getConnection(
-					function(err, connection) {
-						if (err) {
-							connection.release();
-							response['message'] = err.message;
-							res.status(500).json(response);
-							return;
-						}
-						var selectQuery = 'SELECT * FROM question WHERE ?';
-						var selectParam = [key];
-						connection.query(selectQuery, selectParam, function (err, results) {
-							if (err) {
-								connection.release();
-								response[ 'message' ] = err.message;
-								return res.status(500).json(response);
-							}
-							connection.release();
-							response[ "content" ] = results;
-							return res.status(200).json(response);
-						});
+				var selectQuery = 'SELECT * FROM question WHERE ?';
+				var selectParam = [key];
+				connection.query(selectQuery, selectParam, function (err, results) {
+					connection.release();
+					if (err) {
+						response[ 'message' ] = err.message;
+						return res.status(500).json(response);
 					}
-				);
-			});
-		});
+					response[ "content" ] = results;
+					return res.status(200).json(response);
+				});
+			}
+		);
 	});
 };
 
@@ -180,64 +118,38 @@ exports.update = function(req, res, next) {
 	 * questionId :  (PRIMARY)
 	 * content :
 	 *******************************/
-	var token = req.query['token'];
-	if (!token) {
-		return res.status(403).json({
-			"code" : 5,
-			"message" : "Invalid Access"
+	if (!req.query['questionId'] || !req.query['content']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no \'question id\' or \'content\''
 		});
 	}
+	var token = req.query['token'];
+	tokenManager.onePassCheck(token, function(code, result) {
+		if (code != 200)
+			return res.status(code).json(result);
 
-	tokenManager.existsToken(token, function(err, exists) {
-		if (err || !exists)
-			return res.status(210).json({
-				'code' : 4,
-				'message' : 'Invalid token'
-			});
-		tokenManager.isExpired(token, function (err, status) {
-			if (err)
-				return res.status(210).json(err);
-
-			if (status.invalidToken)
-				return res.status(210).json({
-					'code'    : 4,
-					'message' : 'Invalid Token'
-				});
-			if (status.expired)
-				return res.status(210).json({
-					'code'    : 3,
-					'message' : 'session expired'
-				});
-			tokenManager.update(token, function(err, accessToken) {
-				if (err)
-					return res.status(210).json(err);
-				var response = { "accessToken" : accessToken };
-				if (!req.query['content']) {
-					response['message'] = 'no content';
-					return res.status(210).json(response);
+		var response = { "accessToken" : result };
+		connectionPool.getConnection(
+			function(err, connection) {
+				if (err) {
+					connection.release();
+					response['message'] = err.message;
+					return res.status(500).json(response);
 				}
-				connectionPool.getConnection(
-					function(err, connection) {
-						if (err) {
-							connection.release();
-							response['message'] = err.message;
-							return res.status(500).json(response);
-						}
-						var updateQuery = 'UPDATE question SET content = ? WHERE questionId = ?';
-						var updateParam = [req.query['content'], req.query['questionId']];
-						connection.query(updateQuery, updateParam, function(err, results) {
-							connection.release();
-							if (err) {
-								response['message'] = err.message;
-								return res.status(500).json(response);
-							}
-							response['message'] = 'Success for update question!';
-							return res.json(response);
-						});
+				var updateQuery = 'UPDATE question SET content = ? WHERE questionId = ?';
+				var updateParam = [req.query['content'], req.query['questionId']];
+				connection.query(updateQuery, updateParam, function(err, results) {
+					connection.release();
+					if (err) {
+						response['message'] = err.message;
+						return res.status(500).json(response);
 					}
-				);
-			});
-		});
+					response['message'] = 'Success for update question!';
+					return res.json(response);
+				});
+			}
+		);
 	});
 };
 
@@ -247,63 +159,37 @@ exports.delete = function(req, res, next) {
 	 *
 	 * questionId :
 	 *******************************/
-	var token = req.query['token'];
-	if (!token) {
-		return res.status(403).json({
-			"code" : 5,
-			"message" : "Invalid Access"
+	if (!req.query['questionId']) {
+		return res.status(210).json({
+			'code' : 10,
+			'message' : 'no question id'
 		});
 	}
+	var token = req.query['token'];
+	tokenManager.onePassCheck(token, function(code, result) {
+		if (code != 200)
+			return res.status(code).json(result);
 
-	tokenManager.existsToken(token, function(err, exists) {
-		if (err || !exists)
-			return res.status(210).json({
-				'code' : 4,
-				'message' : 'Invalid token'
-			});
-		tokenManager.isExpired(token, function (err, status) {
-			if (err)
-				return res.status(210).json(err);
-
-			if (status.invalidToken)
-				return res.status(210).json({
-					'code'    : 4,
-					'message' : 'Invalid Token'
-				});
-			if (status.expired)
-				return res.status(210).json({
-					'code'    : 3,
-					'message' : 'session expired'
-				});
-			tokenManager.update(token, function(err, accessToken) {
-				if (err)
-					return res.status(210).json(err);
-				var response = { "accessToken" : accessToken };
-				if (!req.query['questionId']) {
-					response['message'] = 'no question id';
-					return res.status(210).json(response);
+		var response = { "accessToken" : result };
+		connectionPool.getConnection(
+			function(err, connection) {
+				if (err) {
+					connection.release();
+					response['message'] = err.message;
+					return res.status(500).json(response);
 				}
-				connectionPool.getConnection(
-					function(err, connection) {
-						if (err) {
-							connection.release();
-							response['message'] = err.message;
-							return res.status(500).json(response);
-						}
-						var deleteQuery = 'DELETE FROM question WHERE questionId = ?';
-						var deleteParam = [req.query['questionId']];
-						connection.query(deleteQuery, deleteParam, function(err, results) {
-							connection.release();
-							if (err) {
-								response['message'] = err.message;
-								return res.status(500).json(response);
-							}
-							response['message'] = 'Success for delete question!';
-							return res.json(response);
-						});
+				var deleteQuery = 'DELETE FROM question WHERE questionId = ?';
+				var deleteParam = [req.query['questionId']];
+				connection.query(deleteQuery, deleteParam, function(err, results) {
+					connection.release();
+					if (err) {
+						response['message'] = err.message;
+						return res.status(500).json(response);
 					}
-				);
-			});
-		});
+					response['message'] = 'Success for delete question!';
+					return res.json(response);
+				});
+			}
+		);
 	});
 };
