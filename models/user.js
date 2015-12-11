@@ -36,7 +36,6 @@ exports.update = function (req, res, next) {
 		if (code !== 200)
 			return res.status(code).json(result);
 
-		var response = { "accessToken" : result };
 		var param = req.query;
 		var userId = req.query['userId'];
 		delete param['token'];
@@ -45,18 +44,21 @@ exports.update = function (req, res, next) {
 			function(err, connection) {
 				connection.release();
 				if (err) {
-					response['message'] = err.message;
-					return res.status(500).json(response);
+					return res.status(500).json({
+						'error' : err.message
+					});
 				}
 				var updateQuery = 'UPDATE user SET ? WHERE userId = ?';
 				var updateParam = [param, userId];
 				connection.query(updateQuery, updateParam, function(err, results) {
 					if (err) {
-						response['message'] = err.message;
-						return res.status(500).json(response);
+						return res.status(500).json({
+							'error' : err.message
+						});
 					}
-					response['message'] = 'Success for update user information';
-					return res.status(200).json(response);
+					return res.status(200).json({
+						'message' : 'Success for update user information'
+					});
 				});
 			}
 		);

@@ -111,7 +111,7 @@ exports.get = function(req, res, next) {
 				var selectQuery = 'SELECT * FROM grade WHERE ';
 				var selectParam = [];
 				if (req.query['lectureId']) {
-					selectQuery = selectQuery + 'lecture Id = ?';
+					selectQuery = selectQuery + 'lectureId = ?';
 					selectParam.push(req.query['lectureId']);
 				}
 				if (req.query['stuId']) {

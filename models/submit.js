@@ -73,10 +73,10 @@ exports.get = function(req, res, next) {
 	 *
 	 * choose one option
 	 *******************************/
-	if (!req.query['lectureId'] || !req.query['assignId']) {
+	if (!req.query['lectureId']) {
 		return res.status(210).json({
 			'code' : 10,
-			'message' : 'no \'lecture id\' or \'assignment id\''
+			'message' : 'no \'lecture id\''
 		});
 	}
 	var token = req.query['token'];
