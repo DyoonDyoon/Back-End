@@ -23,22 +23,10 @@ exports.post = function(req, res, next) {
 	 * stuId :
 	 * filePath :
 	 *******************************/
-	if (!req.query['lectureId']) {
+	if (!req.query['lectureId'] || !req.query['assignId'] || !req.query['stuId']) {
 		return res.status(210).json({
 			'code' : 10,
-			'message' : 'no lecture id'
-		});
-	}
-	if (!req.query['assignId']) {
-		return res.status(210).json({
-			'code' : 10,
-			'message' : 'no assignment id'
-		});
-	}
-	if (!req.query['stuId']) {
-		return res.status(210).json({
-			'code' : 10,
-			'message' : 'no student id'
+			'message' : 'no \'lecture id\' & \'assignment id\' & \'student id\''
 		});
 	}
 
@@ -106,13 +94,16 @@ exports.get = function(req, res, next) {
 					res.status(500).json(response);
 					return;
 				}
-				var selectQuery = 'SELECT * FROM submit WHERE lectureId = ? && assignId = ?';
-				var selectParam = [req.query['lectureId'], req.query['assignId']];
+				var selectQuery = 'SELECT * FROM submit WHERE lectureId = ?';
+				var selectParam = [req.query['lectureId']];
+				if (req.query['assignId']) {
+					selectQuery = selectQuery + ' && assignId = ?';
+					selectParam.push(req.query['assignId']);
+				}
 				if (req.query['stuId']) {
 					selectQuery = selectQuery + ' && stuId = ?';
 					selectParam.push(req.query['stuId']);
 				}
-				console.log(selectQuery);
 				connection.query(selectQuery, selectParam, function (err, results) {
 					connection.release();
 					if (err) {
