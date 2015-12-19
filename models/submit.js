@@ -8,21 +8,22 @@ var tokenManager = require('../controllers/tokenManager');
 /*******************************
  * submit Table structure
  *
- * submitId - INT :  (PRIMARY)
- * lectureId - VARCHAR(30) :
- * assignId - INT :
- * stuId - VARCHAR(30) :
- * filePath - VARCHAR(30) :
+ * submitId - INT : 레포트 아이디 (PRIMARY)
+ * lectureId - VARCHAR(30) : 강의 아이디
+ * assignId - INT : 과제 아이디
+ * stuId - VARCHAR(30) : 제출자 아이디
+ * filePath - VARCHAR(30) : 첨부파일
  *******************************/
 exports.post = function(req, res, next) {
 	/*******************************
 	 * params
 	 *
-	 * lectureId :
-	 * assignId :
-	 * stuId :
-	 * filePath :
+	 * lectureId
+	 * assignId
+	 * stuId
+	 * filePath
 	 *******************************/
+	// 파라미터 유효성 검사
 	if (!req.query['lectureId'] || !req.query['assignId'] || !req.query['stuId']) {
 		return res.status(210).json({
 			'code' : 10,
@@ -31,7 +32,7 @@ exports.post = function(req, res, next) {
 	}
 
 	var token = req.query['token'];
-	tokenManager.onePassCheck(token, function(code, result) {
+	tokenManager.onePassCheck(token, function(code, result) { // 토큰 유효성 검사 및 갱신
 		if (code != 200)
 			return res.status(code).json(result);
 
@@ -49,7 +50,7 @@ exports.post = function(req, res, next) {
 
 				var insertQuery = 'INSERT INTO submit SET ?';
 				var insertParam = [param];
-				connection.query(insertQuery, insertParam, function(err, results) {
+				connection.query(insertQuery, insertParam, function(err, results) { // 레포트 업로드ㄴ
 					connection.release();
 					if (err) {
 						response['message'] = err.message;
@@ -67,12 +68,13 @@ exports.get = function(req, res, next) {
 	/*******************************
 	 * params
 	 *
-	 * lectureId :
-	 * stuId :  for student
-	 * assignId :
+	 * lectureId : 강의 아이디
+	 * stuId : 제출자 아이디 (for student)
+	 * assignId : 과제 아이디
 	 *
 	 * choose one option
 	 *******************************/
+	// 파라미터 유효성 검사
 	if (!req.query['lectureId']) {
 		return res.status(210).json({
 			'code' : 10,
@@ -80,7 +82,7 @@ exports.get = function(req, res, next) {
 		});
 	}
 	var token = req.query['token'];
-	tokenManager.onePassCheck(token, function(code, result) {
+	tokenManager.onePassCheck(token, function(code, result) { // 토큰 유효성 검사 및 갱신
 		if (code != 200)
 			return res.status(code).json(result);
 
@@ -104,14 +106,14 @@ exports.get = function(req, res, next) {
 					selectQuery = selectQuery + ' && stuId = ?';
 					selectParam.push(req.query['stuId']);
 				}
-				connection.query(selectQuery, selectParam, function (err, results) {
+				connection.query(selectQuery, selectParam, function (err, results) { // 파라미터에 따른 내용 가져오기
 					connection.release();
 					if (err) {
 						response[ 'message' ] = err.message;
 						return res.status(500).json(response);
 					}
 					response[ "content" ] = results;
-					return res.status(200).json(response);
+					return res.status(200).json(response);  // 결과 반환
 				});
 			}
 		);
@@ -122,9 +124,10 @@ exports.update = function(req, res, next) {
 	/*******************************
 	 * params
 	 *
-	 * submitId :  (PRIMARY)
-	 * filePath :
+	 * submitId
+	 * filePath
 	 *******************************/
+	// 파라미터 유효성 검사
 	if (!req.query['filePath'] || !req.query['submitId']) {
 		return res.status(210).json({
 			'code' : 10,
@@ -132,7 +135,7 @@ exports.update = function(req, res, next) {
 		});
 	}
 	var token = req.query['token'];
-	tokenManager.onePassCheck(token, function(code, result) {
+	tokenManager.onePassCheck(token, function(code, result) { // 토큰 유효성 검사 및 갱신
 		if (code != 200)
 			return res.status(code).json(result);
 
@@ -147,7 +150,7 @@ exports.update = function(req, res, next) {
 				}
 				var updateQuery = 'UPDATE submit SET filePath = ? WHERE submitId = ?';
 				var updateParam = [req.query['filePath'], req.query['submitId']];
-				connection.query(updateQuery, updateParam, function(err, results) {
+				connection.query(updateQuery, updateParam, function(err, results) { // 레포트 내용 변경
 					connection.release();
 					if (err) {
 						response['message'] = err.message;
@@ -166,8 +169,9 @@ exports.delete = function(req, res, next) {
 	/*******************************
 	 * params
 	 *
-	 * submitId :
+	 * submitId
 	 *******************************/
+	// 파라미터 유효성 검사
 	if (!req.query['submitId']) {
 		return res.status(210).json({
 			'code' : 10,
@@ -175,7 +179,7 @@ exports.delete = function(req, res, next) {
 		});
 	}
 	var token = req.query['token'];
-	tokenManager.onePassCheck(token, function(code, result) {
+	tokenManager.onePassCheck(token, function(code, result) { // 토큰 유효성 검사 및 갱신
 		if (code != 200)
 			return res.status(code).json(result);
 		var response = { "accessToken" : result };
@@ -188,7 +192,7 @@ exports.delete = function(req, res, next) {
 				}
 				var deleteQuery = 'DELETE FROM submit WHERE submitId = ?';
 				var deleteParam = [req.query['submitId']];
-				connection.query(deleteQuery, deleteParam, function(err, results) {
+				connection.query(deleteQuery, deleteParam, function(err, results) { // 레포트 삭제
 					connection.release();
 					if (err) {
 						response['message'] = err.message;

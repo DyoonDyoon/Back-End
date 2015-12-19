@@ -9,21 +9,22 @@ var tokenManager = require('../controllers/tokenManager');
 /*******************************
  * grade Table structure
  *
- * gradeId - INT :  (PRIMARY)
- * submitId - INT :
- * lectureId - VARCHAR(30) :
- * stuId - VARCHAR(30) :
- * score - INT :
+ * gradeId - INT : 점수 아이디 (PRIMARY)
+ * submitId - INT : 레포트 아이디
+ * lectureId - VARCHAR(30) : 강의 아이디
+ * stuId - VARCHAR(30) : 제출자 아이디
+ * score - INT : 점수
  *******************************/
 exports.post = function(req, res, next) {
 	/*******************************
 	 * params
 	 *
-	 * lectureId :
-	 * submitId :
-	 * stuId :
-	 * score :
+	 * lectureId
+	 * submitId
+	 * stuId
+	 * score
 	 *******************************/
+	// 파라미터 유효성 검사
 	if (!req.query['lectureId']) {
 		return res.status(210).json({
 			'code' : 10,
@@ -44,7 +45,7 @@ exports.post = function(req, res, next) {
 	}
 
 	var token = req.query['token'];
-	tokenManager.onePassCheck(token, function(code, result) {
+	tokenManager.onePassCheck(token, function(code, result) { // 토큰 유효성 검사 및 갱신
 		if (code != 200)
 			return res.status(code).json(result);
 
@@ -62,7 +63,7 @@ exports.post = function(req, res, next) {
 
 				var insertQuery = 'INSERT INTO grade SET ?';
 				var insertParam = [param];
-				connection.query(insertQuery, insertParam, function(err, results) {
+				connection.query(insertQuery, insertParam, function(err, results) { // 점수 업로드
 					if (err) {
 						connection.release();
 						response['message'] = err.message;
@@ -81,10 +82,11 @@ exports.get = function(req, res, next) {
 	/*******************************
 	 * params
 	 *
-	 * stuId :
-	 * lectureId :
+	 * stuId
+	 * lectureId
 	 *******************************/
 	var key = {};
+	// 파라미터 유효성 검사
 	if (!req.query['lectureId'] && !req.query['stuId']) {
 		return res.status(210).json({
 			'code' : 10,
@@ -94,7 +96,7 @@ exports.get = function(req, res, next) {
 
 	var token = req.query['token'];
 
-	tokenManager.onePassCheck(token, function(code, result) {
+	tokenManager.onePassCheck(token, function(code, result) { // 토큰 유효성 검사 및 갱신
 		if (code != 200)
 			return res.status(code).json(result);
 
@@ -120,13 +122,13 @@ exports.get = function(req, res, next) {
 					selectQuery = selectQuery + 'stuId = ?';
 					selectParam.push(req.query['stuId']);
 				}
-				connection.query(selectQuery, selectParam, function (err, results) {
+				connection.query(selectQuery, selectParam, function (err, results) { // 해당 파라미터에 의한 점수 검색
 					connection.release();
 					if (err) {
 						response[ 'message' ] = err.message;
 						return res.status(500).json(response);
 					}
-					response[ "content" ] = results;
+					response[ "content" ] = results;  // 검색된 결과 반환
 					return res.status(200).json(response);
 				});
 			}
@@ -138,9 +140,10 @@ exports.update = function(req, res, next) {
 	/*******************************
 	 * params
 	 *
-	 * gradeId :  (PRIMARY)
-	 * score :
+	 * gradeId
+	 * score
 	 *******************************/
+	// 유효성 검사
 	if (!req.query['gradeId']) {
 		return res.status(210).json({
 			'code' : 10,
@@ -155,7 +158,7 @@ exports.update = function(req, res, next) {
 	}
 
 	var token = req.query['token'];
-	tokenManager.onePassCheck(token, function(code, result) {
+	tokenManager.onePassCheck(token, function(code, result) { // 토큰 유효성 검사 및 갱신
 		if (code != 200)
 			return res.status(code).json(result);
 
@@ -169,14 +172,14 @@ exports.update = function(req, res, next) {
 				}
 				var updateQuery = 'UPDATE grade SET score = ? WHERE gradeId = ?';
 				var updateParam = [req.query['score'], req.query['gradeId']];
-				connection.query(updateQuery, updateParam, function(err, results) {
+				connection.query(updateQuery, updateParam, function(err, results) { // 점수 갱신
 					connection.release();
 					if (err) {
 						response['message'] = err.message;
 						return res.status(500).json(response);
 					}
 					response['message'] = 'Success for update grade!';
-					return res.json(response);
+					return res.json(response);  // 결과 반환
 				});
 			}
 		);
@@ -187,8 +190,9 @@ exports.delete = function(req, res, next) {
 	/*******************************
 	 * params
 	 *
-	 * gradeId :
+	 * gradeId
 	 *******************************/
+	// 파라미터 유효성 검사
 	if (!req.query['gradeId']) {
 		return res.status(210).json({
 			'code' : 10,
@@ -196,7 +200,7 @@ exports.delete = function(req, res, next) {
 		});
 	}
 	var token = req.query['token'];
-	tokenManager.onePassCheck(token, function(code, result) {
+	tokenManager.onePassCheck(token, function(code, result) { // 토큰 유효성 검사 및 갱신
 		if (code != 200)
 			return res.status(code).json(result);
 
@@ -210,7 +214,7 @@ exports.delete = function(req, res, next) {
 				}
 				var deleteQuery = 'DELETE FROM grade WHERE gradeId = ?';
 				var deleteParam = [req.query['gradeId']];
-				connection.query(deleteQuery, deleteParam, function(err, results) {
+				connection.query(deleteQuery, deleteParam, function(err, results) { // 점수 삭제
 					connection.release();
 					if (err) {
 						response['message'] = err.message;

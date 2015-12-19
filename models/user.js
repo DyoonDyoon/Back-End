@@ -6,16 +6,6 @@ var mysql = require('mysql');
 var connectionPool = mysql.createPool(dbConfig);
 var tokenManager = require('../controllers/tokenManager');
 
-exports.list = function (req, res) {
-	connectionPool.getConnection(function (err, connection) {
-    connection.query('SELECT * FROM user', function (err, rows, fields) {
-	    connection.release();
-      if (err) throw err;
-      return res.json(rows);
-    });
-  });
-};
-
 exports.update = function (req, res, next) {
 	/*******************************
 	 * params
@@ -25,6 +15,7 @@ exports.update = function (req, res, next) {
 	 * major :
 	 * name :
 	 *******************************/
+	// 파라미터 유효성 검사
 	if (!req.query['userId']) {
 		return res.status(210).json({
 			'code' : 10,
@@ -32,7 +23,7 @@ exports.update = function (req, res, next) {
 		});
 	}
 	var token = req.query['token'];
-	tokenManager.onePassCheck(token, function(code, result) {
+	tokenManager.onePassCheck(token, function(code, result) { // 토큰 유효성 검사 및 갱신
 		if (code !== 200)
 			return res.status(code).json(result);
 
@@ -50,7 +41,7 @@ exports.update = function (req, res, next) {
 				}
 				var updateQuery = 'UPDATE user SET ? WHERE userId = ?';
 				var updateParam = [param, userId];
-				connection.query(updateQuery, updateParam, function(err, results) {
+				connection.query(updateQuery, updateParam, function(err, results) { // 유저 정보 변경
 					if (err) {
 						return res.status(500).json({
 							'error' : err.message

@@ -8,19 +8,20 @@ var tokenManager = require('../controllers/tokenManager');
 /*******************************
  * question Table structure
  *
- * questionId - INT :  (PRIMARY)
- * lectureId - VARCHAR(30) :
- * stuId - VARCHAR(30) :
- * content - TEXT :
+ * questionId - INT : 질문 아이디 (PRIMARY)
+ * lectureId - VARCHAR(30) : 강의 아이디
+ * stuId - VARCHAR(30) : 질문자 아이디
+ * content - TEXT : 질문 내용
  *******************************/
 exports.post = function(req, res, next) {
 	/*******************************
 	 * params
 	 *
-	 * lectureId :
-	 * stuId :
-	 * content :
+	 * lectureId
+	 * stuId
+	 * content
 	 *******************************/
+	// 파라미터 유효성 검사
 	if (!req.query['lectureId'] || !req.query['stuId'] || !req.query['content']) {
 		return res.status(210).json({
 			'code' : 10,
@@ -28,7 +29,7 @@ exports.post = function(req, res, next) {
 		});
 	}
 	var token = req.query['token'];
-	tokenManager.onePassCheck(token, function(code, result) {
+	tokenManager.onePassCheck(token, function(code, result) { // 토큰 유효성 검사 및 갱신
 		if (code != 200)
 			return res.status(code).json(result);
 		var response = { "accessToken" : result };
@@ -45,7 +46,7 @@ exports.post = function(req, res, next) {
 
 				var insertQuery = 'INSERT INTO question SET ?';
 				var insertParam = [param];
-				connection.query(insertQuery, insertParam, function(err, results) {
+				connection.query(insertQuery, insertParam, function(err, results) { // 질문 추가
 					if (err) {
 						connection.release();
 						response['message'] = err.message;
@@ -53,7 +54,7 @@ exports.post = function(req, res, next) {
 					}
 					connection.release();
 					response["message"] = "Success for post question";
-					return res.status(200).json(response);
+					return res.status(200).json(response);  // 결과 반환
 				});
 			}
 		);
@@ -64,12 +65,14 @@ exports.get = function(req, res, next) {
 	/*******************************
 	 * params
 	 *
-	 * stuId :
-	 * lectureId :
+	 * stuId
+	 * lectureId
 	 *
 	 * choose one option
 	 *******************************/
 	var key = {};
+
+	// 파라미터 유효성 검사
 	if (!req.query['lectureId'] && !req.query['stuId']) {
 		return res.status(210).json({
 			'code' : 10,
@@ -82,7 +85,7 @@ exports.get = function(req, res, next) {
 	}
 
 	var token = req.query['token'];
-	tokenManager.onePassCheck(token, function(code, result) {
+	tokenManager.onePassCheck(token, function(code, result) {   // 토큰 유효성 검사 및 갱신
 		if (code != 200)
 			return res.status(code).json(result);
 
@@ -97,14 +100,14 @@ exports.get = function(req, res, next) {
 				}
 				var selectQuery = 'SELECT * FROM question WHERE ?';
 				var selectParam = [key];
-				connection.query(selectQuery, selectParam, function (err, results) {
+				connection.query(selectQuery, selectParam, function (err, results) {  // 파라미터에 따른 검색
 					connection.release();
 					if (err) {
 						response[ 'message' ] = err.message;
 						return res.status(500).json(response);
 					}
 					response[ "content" ] = results;
-					return res.status(200).json(response);
+					return res.status(200).json(response);  // 검색 결과 반환
 				});
 			}
 		);
@@ -115,9 +118,10 @@ exports.update = function(req, res, next) {
 	/*******************************
 	 * params
 	 *
-	 * questionId :  (PRIMARY)
-	 * content :
+	 * questionId
+	 * content
 	 *******************************/
+	// 파라미터 유효성 검사
 	if (!req.query['questionId'] || !req.query['content']) {
 		return res.status(210).json({
 			'code' : 10,
@@ -125,7 +129,7 @@ exports.update = function(req, res, next) {
 		});
 	}
 	var token = req.query['token'];
-	tokenManager.onePassCheck(token, function(code, result) {
+	tokenManager.onePassCheck(token, function(code, result) { // 토큰 유효성 검사 및 갱신
 		if (code != 200)
 			return res.status(code).json(result);
 
@@ -139,7 +143,7 @@ exports.update = function(req, res, next) {
 				}
 				var updateQuery = 'UPDATE question SET content = ? WHERE questionId = ?';
 				var updateParam = [req.query['content'], req.query['questionId']];
-				connection.query(updateQuery, updateParam, function(err, results) {
+				connection.query(updateQuery, updateParam, function(err, results) { // 질문 내용 변경
 					connection.release();
 					if (err) {
 						response['message'] = err.message;
@@ -166,7 +170,7 @@ exports.delete = function(req, res, next) {
 		});
 	}
 	var token = req.query['token'];
-	tokenManager.onePassCheck(token, function(code, result) {
+	tokenManager.onePassCheck(token, function(code, result) { // 토큰 유효성 검사 및 갱신
 		if (code != 200)
 			return res.status(code).json(result);
 
@@ -180,7 +184,7 @@ exports.delete = function(req, res, next) {
 				}
 				var deleteQuery = 'DELETE FROM question WHERE questionId = ?';
 				var deleteParam = [req.query['questionId']];
-				connection.query(deleteQuery, deleteParam, function(err, results) {
+				connection.query(deleteQuery, deleteParam, function(err, results) { // 질문 삭제
 					connection.release();
 					if (err) {
 						response['message'] = err.message;
