@@ -147,7 +147,7 @@
 ```
 {
   "version": 1,
-  "URL": "https://rawgit.com/DyoonDyoon/Back-End/master/script/json/1.json"
+  "URL": "https://cdn.jsdelivr.net/gh/DyoonDyoon/Back-End/script/json/1.json"
 }
 ```
 
